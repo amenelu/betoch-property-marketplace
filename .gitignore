@@ -7,3 +7,5 @@ npm-debug.log*
 .localtunnel-*.log
 .cloudflared-*.log
 .dev.*.log
+/.audit
+/.vercel

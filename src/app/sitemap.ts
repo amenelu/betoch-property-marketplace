@@ -1,0 +1,2 @@
+import type {MetadataRoute} from "next";import {properties} from "@/lib/data";
+export default function sitemap():MetadataRoute.Sitemap{const base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000";return [{url:base,changeFrequency:"daily",priority:1},{url:`${base}/properties`,changeFrequency:"daily",priority:.9},...properties.map(p=>({url:`${base}/properties/${p.slug}`,lastModified:new Date(p.createdAt),changeFrequency:"weekly" as const,priority:.8}))]}

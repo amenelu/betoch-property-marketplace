@@ -59,4 +59,6 @@ Tests cover property validation, negative values, coordinate safety, ownership a
 4. Deploy to Vercel with `vercel` or connect the Git repository.
 5. Confirm storage policies, create the first admin role through a controlled SQL/admin process, and remove all development seed data.
 
+The repository includes `vercel.json`, `/api/health`, security response headers, dynamic `robots.txt`/`sitemap.xml`, and a GitHub Actions test/build gate. Review [MVP_GAP_ANALYSIS.md](MVP_GAP_ANALYSIS.md) before treating a deployment as a production-ready marketplace: the current UI still uses fixtures and authentication/admin screens are demonstrations until Supabase sessions are connected.
+
 The MVP intentionally excludes payments, mortgages, escrow, legal advice, automated valuation, nationwide rollout, and Ethiopian government integrations.
