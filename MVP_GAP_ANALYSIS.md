@@ -4,7 +4,23 @@ Status legend: **Implemented** means a usable route or backend capability exists
 
 ## Executive summary
 
-The repository is currently a polished frontend prototype plus an initial PostgreSQL/RLS schema. It is not yet a complete production MVP. The public browse and property-detail experience is the strongest area. Authentication, seller workflows, administration, storage processing, and most mutation APIs remain demo-only or absent.
+The repository now provides a complete navigable demo MVP for buyer/renter, owner/broker, and administrator roles, plus a production-shaped PostgreSQL/RLS schema and authenticated APIs. Every visible primary navigation item and action has a usable destination or state transition. Browser-local persistence is used when Supabase is not configured. A production launch still requires a configured Supabase project, real user sessions, processed media, a map provider, rate limiting, and expanded integration/E2E testing.
+
+## Completion update
+
+Completed since the initial gap review:
+
+- Role-based demo registration/login, password recovery and access gates
+- Persistent favorites page and seller profile routes
+- Persistent inquiry and reporting dialogs connected to seller/admin queues
+- Functional seller listings, editing, inbox, analytics and profile sections
+- Functional admin property moderation, users, verification and reports sections
+- Ten-step stateful listing creation with preview and pending-review submission
+- Responsive property gallery repair and seller profile linking
+- Authenticated inquiry, report, moderation, user, verification, private-document, image and analytics APIs
+- Browser-verified buyer → favorite, login → admin, and inquiry → seller-inbox flows
+
+Items labeled “Missing” below should now be read as production integration gaps where a demo workflow exists. The final launch blockers remain summarized in “Deployment readiness checklist.”
 
 ## Public marketplace
 

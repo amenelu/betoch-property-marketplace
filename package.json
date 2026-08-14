@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run --pool=forks --poolOptions.forks.singleFork=true",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed": "node scripts/seed.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

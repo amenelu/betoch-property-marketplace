@@ -26,6 +26,14 @@ npx supabase db reset
 
 `db reset` runs migrations followed by `supabase/seed.sql`. Copy the printed local API URL, anon key, service role key, and database URL into `.env.local`. To deploy schema changes to a linked Supabase project, run `npx supabase link` and `npx supabase db push`.
 
+To create the full development dataset (30 auth-backed users and 50 properties), load `.env.local` into your shell and run:
+
+```bash
+npm run seed
+```
+
+All generated accounts use development-only addresses ending in `@betoch.local` and the password `BetochDev123!`. Never run the development seed against production.
+
 Authentication uses Supabase email/password. User-facing requests should use the anon client plus the user's bearer token; the service-role key is server-only. RLS—not client role state—is the final authorization boundary.
 
 ## Architecture decisions
