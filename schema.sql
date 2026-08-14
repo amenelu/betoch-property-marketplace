@@ -1,0 +1,3 @@
+-- Compatibility pointer: the canonical versioned schema is:
+-- supabase/migrations/202608140001_initial_marketplace.sql
+-- Apply it with `npx supabase db reset` locally or `npx supabase db push` remotely.

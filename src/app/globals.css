@@ -1,0 +1,4 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root{color-scheme:light}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#fbfaf6;color:#292b28;font-family:Arial,Helvetica,sans-serif}.eyebrow{font-size:.7rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#c35036}.section-title{margin-top:.55rem;font-family:Georgia,serif;font-size:clamp(2rem,4vw,3rem);font-weight:600;line-height:1.1;color:#183c34}::selection{background:#e9b469;color:#183c34}

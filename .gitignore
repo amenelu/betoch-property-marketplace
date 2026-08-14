@@ -1,0 +1,9 @@
+/node_modules
+/.next
+/.env.local
+npm-debug.log*
+*.tsbuildinfo
+.n8n-*.log
+.localtunnel-*.log
+.cloudflared-*.log
+.dev.*.log
