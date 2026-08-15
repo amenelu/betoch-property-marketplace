@@ -1,10 +1,211 @@
 "use client";
-import Link from "next/link";import {useState} from "react";import {useRouter} from "next/navigation";import {Camera,Check,ChevronLeft,MapPin} from "@/components/icons";import {useDemo} from "@/components/demo-provider";
-const labels=["Intent","Property","Details","Price","Amenities","Location","Photos","Description","Preview","Submit"];
-type State={intent:string;type:string;title:string;price:string;area:string;neighborhood:string;description:string;photos:number;amenities:string[]};
-const empty:State={intent:"sale",type:"apartment",title:"",price:"",area:"",neighborhood:"",description:"",photos:0,amenities:[]};
-export default function NewListing(){const [step,setStep]=useState(0);const [data,setData]=useState(empty);const {addListing}=useDemo();const router=useRouter();const update=(key:keyof State,value:State[keyof State])=>setData(x=>({...x,[key]:value}));function submit(){addListing({title:data.title||`New ${data.type}`,neighborhood:data.neighborhood||"Addis Ababa",price:Number(data.price)||0});router.push("/dashboard")}return <main className="min-h-screen bg-[#f6f4ee]"><header className="border-b bg-white"><div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5"><Link href="/dashboard" className="flex items-center gap-1 text-sm"><ChevronLeft size={17}/>Exit</Link><b className="font-serif text-xl text-[#173c34]">Create a listing</b><span className="text-xs text-stone-500">Saved locally</span></div></header><div className="mx-auto max-w-5xl px-5 py-6"><div className="flex gap-1">{labels.map((x,i)=><div key={x} className={`h-1 flex-1 rounded ${i<=step?"bg-[#d85d3f]":"bg-stone-200"}`}/>)}</div><p className="mt-3 text-xs font-semibold text-stone-500">Step {step+1} of 10 · {labels[step]}</p><section className="mx-auto mt-8 min-h-[430px] max-w-2xl rounded-2xl border bg-white p-6 sm:p-10"><Step step={step} data={data} update={update}/></section><div className="mx-auto mt-6 flex max-w-2xl justify-between"><button disabled={!step} onClick={()=>setStep(x=>x-1)} className="min-h-11 rounded-full border px-6 font-bold disabled:opacity-30">Back</button><button onClick={()=>step===9?submit():setStep(x=>x+1)} className="min-h-11 rounded-full bg-[#d85d3f] px-7 font-bold text-white">{step===9?"Submit for review":"Continue"}</button></div></div></main>}
-function Step({step,data,update}:{step:number;data:State;update:(k:keyof State,v:State[keyof State])=>void}){const headings=["What would you like to do?","What kind of property is it?","Tell us the basics","Set the asking price","Which amenities are available?","Where is the property?","Add property photographs","Describe the property","Review your listing","Ready for admin review?"];return <><p className="eyebrow">Step {step+1} of 10</p><h1 className="mt-3 font-serif text-3xl font-semibold text-[#173c34]">{headings[step]}</h1><div className="mt-8">{step===0?<Choices value={data.intent} items={["sale","rent"]} change={v=>update("intent",v)}/>:null}{step===1?<Choices value={data.type} items={["apartment","house","villa","condominium","land","commercial","office","warehouse"]} change={v=>update("type",v)}/>:null}{step===2?<Text label="Listing title" value={data.title} change={v=>update("title",v)}/>:null}{step===3?<div className="grid gap-4 sm:grid-cols-2"><Text label="Price (ETB)" value={data.price} change={v=>update("price",v)} number/><Text label="Area (m²)" value={data.area} change={v=>update("area",v)} number/></div>:null}{step===4?<div className="grid gap-3 sm:grid-cols-2">{["Furnished","Elevator","Generator","Water tank","Security","Balcony","Garden"].map(x=><label key={x} className="flex min-h-14 items-center gap-3 rounded-xl border p-4"><input type="checkbox" checked={data.amenities.includes(x)} onChange={e=>update("amenities",e.target.checked?[...data.amenities,x]:data.amenities.filter(a=>a!==x))}/>{x}</label>)}</div>:null}{step===5?<><Text label="Neighborhood" value={data.neighborhood} change={v=>update("neighborhood",v)}/><div className="relative mt-4 h-44 rounded-xl bg-[#dce5dc]"><MapPin className="absolute left-1/2 top-1/2 text-[#d85d3f]"/><p className="absolute bottom-2 left-2 rounded bg-white px-2 py-1 text-xs">Approximate public location</p></div></>:null}{step===6?<label className="grid h-52 place-items-center rounded-xl border-2 border-dashed text-center"><input type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={e=>update("photos",Math.min(e.target.files?.length||0,20))}/><span><Camera className="mx-auto text-[#287864]"/><b className="mt-3 block">{data.photos?`${data.photos} photo(s) selected`:"Upload up to 20 photos"}</b><small>JPG, PNG or WebP · 10 MB each</small></span></label>:null}{step===7?<label className="text-sm font-semibold">Description<textarea value={data.description} onChange={e=>update("description",e.target.value)} className="mt-2 h-48 w-full rounded-xl border p-3 font-normal"/></label>:null}{step===8?<dl className="grid gap-4 rounded-xl bg-stone-50 p-5 sm:grid-cols-2"><Item k="Listing" v={`For ${data.intent} · ${data.type}`}/><Item k="Title" v={data.title||"Not provided"}/><Item k="Price / area" v={`${data.price||"—"} ETB · ${data.area||"—"} m²`}/><Item k="Location" v={data.neighborhood||"Not provided"}/><Item k="Photos" v={String(data.photos)}/><Item k="Amenities" v={data.amenities.join(", ")||"None"}/></dl>:null}{step===9?<div className="rounded-xl bg-[#e7eee9] p-6"><Check className="text-[#287864]"/><b className="mt-3 block text-[#173c34]">Ready for manual review</b><p className="mt-1 text-sm text-stone-600">The listing will appear as pending review and remain private until approved.</p></div>:null}</div></>}
-function Choices({value,items,change}:{value:string;items:string[];change:(v:string)=>void}){return <div className="grid gap-3 sm:grid-cols-2">{items.map(x=><label key={x} className="flex min-h-14 items-center gap-3 rounded-xl border p-4 capitalize"><input type="radio" checked={value===x} onChange={()=>change(x)}/>{x}</label>)}</div>}
-function Text({label,value,change,number=false}:{label:string;value:string;change:(v:string)=>void;number?:boolean}){return <label className="text-sm font-semibold">{label}<input required type={number?"number":"text"} min={number?0:undefined} value={value} onChange={e=>change(e.target.value)} className="mt-2 h-12 w-full rounded-xl border px-3 font-normal"/></label>}
-function Item({k,v}:{k:string;v:string}){return <div><dt className="text-xs text-stone-500">{k}</dt><dd className="font-bold">{v}</dd></div>}
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft } from "@/components/icons";
+import { useDemo } from "@/components/demo-provider";
+export default function NewListing() {
+  const { addListing, user } = useDemo();
+  const router = useRouter();
+  const [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  return (
+    <main className="min-h-screen bg-[#f6f4ee]">
+      <header className="border-b bg-white">
+        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-5">
+          <Link href="/dashboard" className="flex items-center gap-1 text-sm">
+            <ChevronLeft size={17} />
+            Exit
+          </Link>
+          <b className="font-serif text-xl text-[#173c34]">Create a listing</b>
+          <span className="text-xs text-stone-500">Saved securely</span>
+        </div>
+      </header>
+      <form
+        className="mx-auto grid max-w-4xl gap-6 px-5 py-10 sm:grid-cols-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError("");
+          const d = new FormData(e.currentTarget),
+            title = String(d.get("title"));
+          try {
+            await addListing({
+              slug: `${title
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)/g, "")}-${Date.now()}`,
+              title,
+              description: String(d.get("description")),
+              property_type: String(d.get("property_type")),
+              listing_type: String(d.get("listing_type")),
+              price: Number(d.get("price")),
+              currency: "ETB",
+              area_sqm: Number(d.get("area_sqm")),
+              bedrooms: Number(d.get("bedrooms")),
+              bathrooms: Number(d.get("bathrooms")),
+              parking_spaces: Number(d.get("parking_spaces")),
+              city: "Addis Ababa",
+              subcity: String(d.get("subcity")),
+              neighborhood: String(d.get("neighborhood")),
+              location_precision: "approximate",
+              furnished: d.get("furnished") === "on",
+              has_generator: d.get("has_generator") === "on",
+              has_water_tank: d.get("has_water_tank") === "on",
+              has_security: d.get("has_security") === "on",
+            });
+            router.push("/dashboard");
+          } catch (x) {
+            setError(x instanceof Error ? x.message : "Unable to save listing");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <div className="sm:col-span-2">
+          <p className="eyebrow">Seller workspace</p>
+          <h1 className="font-serif text-4xl text-[#173c34]">
+            Tell us about the property
+          </h1>
+          <p className="mt-2 text-sm text-stone-500">
+            It will be saved as a private draft for {user?.name}.
+          </p>
+        </div>
+        <Field name="title" label="Listing title" />
+        <Select
+          name="property_type"
+          label="Property type"
+          options={[
+            "apartment",
+            "house",
+            "villa",
+            "condominium",
+            "land",
+            "commercial",
+            "office",
+            "warehouse",
+            "other",
+          ]}
+        />
+        <Select
+          name="listing_type"
+          label="Listing mode"
+          options={[
+            "sale",
+            "long_term_rent",
+            "medium_term_rent",
+            "short_term_stay",
+          ]}
+        />
+        <Field name="price" label="Price (ETB)" type="number" />
+        <Field name="area_sqm" label="Area (m²)" type="number" />
+        <Field
+          name="bedrooms"
+          label="Bedrooms"
+          type="number"
+          defaultValue="0"
+        />
+        <Field
+          name="bathrooms"
+          label="Bathrooms"
+          type="number"
+          defaultValue="0"
+        />
+        <Field
+          name="parking_spaces"
+          label="Parking spaces"
+          type="number"
+          defaultValue="0"
+        />
+        <Field name="subcity" label="Subcity" />
+        <Field name="neighborhood" label="Neighborhood" />
+        <label className="sm:col-span-2 text-sm font-semibold">
+          Description
+          <textarea
+            name="description"
+            required
+            maxLength={5000}
+            className="mt-2 h-36 w-full rounded-xl border p-3 font-normal"
+          />
+        </label>
+        <div className="flex flex-wrap gap-5 sm:col-span-2">
+          {[
+            ["furnished", "Furnished"],
+            ["has_generator", "Generator"],
+            ["has_water_tank", "Water tank"],
+            ["has_security", "Security"],
+          ].map(([name, label]) => (
+            <label key={name} className="flex items-center gap-2 text-sm">
+              <input name={name} type="checkbox" />
+              {label}
+            </label>
+          ))}
+        </div>
+        {error ? (
+          <p
+            role="alert"
+            className="rounded-xl bg-red-50 p-3 text-sm text-red-800 sm:col-span-2"
+          >
+            {error}
+          </p>
+        ) : null}
+        <button
+          disabled={busy}
+          className="min-h-12 rounded-full bg-[#d85d3f] px-6 font-bold text-white disabled:opacity-60 sm:col-span-2 sm:w-fit"
+        >
+          {busy ? "Saving…" : "Save draft"}
+        </button>
+      </form>
+    </main>
+  );
+}
+function Field({
+  name,
+  label,
+  type = "text",
+  defaultValue,
+}: {
+  name: string;
+  label: string;
+  type?: string;
+  defaultValue?: string;
+}) {
+  return (
+    <label className="text-sm font-semibold">
+      {label}
+      <input
+        name={name}
+        type={type}
+        required
+        min={type === "number" ? 0 : undefined}
+        defaultValue={defaultValue}
+        className="mt-2 h-12 w-full rounded-xl border px-3 font-normal"
+      />
+    </label>
+  );
+}
+function Select({
+  name,
+  label,
+  options,
+}: {
+  name: string;
+  label: string;
+  options: string[];
+}) {
+  return (
+    <label className="text-sm font-semibold">
+      {label}
+      <select
+        name={name}
+        className="mt-2 h-12 w-full rounded-xl border px-3 font-normal capitalize"
+      >
+        {options.map((x) => (
+          <option key={x} value={x}>
+            {x.replaceAll("_", " ")}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
