@@ -15,6 +15,15 @@ export type DemoUser = {
   email: string;
   role: DemoRole;
 } | null;
+export type SellerProfile = {
+  name: string;
+  agencyName: string;
+  phone: string;
+  whatsapp: string;
+  bio: string;
+  showPhone: boolean;
+  showWhatsapp: boolean;
+};
 export type Inquiry = {
   id: string;
   propertyId: string;
@@ -51,6 +60,8 @@ export type BookingRequest = {
   propertyId: string;
   propertyTitle: string;
   guestName: string;
+  guestId: string;
+  hostId: string;
   checkIn: string;
   checkOut: string;
   guestCount: number;
@@ -62,6 +73,7 @@ export type Review = {
   id: string;
   propertyId: string;
   propertyTitle: string;
+  bookingRequestId: string;
   rating: number;
   title: string;
   text: string;
@@ -71,6 +83,7 @@ export type Review = {
 type Value = {
   ready: boolean;
   user: DemoUser;
+  sellerProfile: SellerProfile | null;
   favorites: string[];
   inquiries: Inquiry[];
   reports: Report[];
@@ -97,9 +110,10 @@ type Value = {
     x: Omit<Report, "id" | "status" | "createdAt">,
   ) => Promise<void>;
   updateReport: (id: string, status: Report["status"]) => Promise<void>;
+  updateSellerProfile: (profile: SellerProfile) => Promise<void>;
   addListing: (x: Record<string, unknown>) => Promise<string>;
   requestStay: (
-    x: Omit<BookingRequest, "id" | "status" | "createdAt" | "guestName">,
+    x: Omit<BookingRequest, "id" | "status" | "createdAt" | "guestName" | "guestId" | "hostId">,
   ) => Promise<void>;
   updateBooking: (
     id: string,
@@ -111,6 +125,7 @@ const Context = createContext<Value | null>(null);
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false),
     [user, setUser] = useState<DemoUser>(null),
+    [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null),
     [favorites, setFavorites] = useState<string[]>([]),
     [inquiries, setInquiries] = useState<Inquiry[]>([]),
     [reports, setReports] = useState<Report[]>([]),
@@ -151,17 +166,19 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     } = await client.auth.getUser();
     if (!authUser) {
       setUser(null);
+      setSellerProfile(null);
       setFavorites([]);
       setInquiries([]);
       setReports([]);
       setListings([]);
+      setReviews([]);
       setSellerAnalytics({ views: 0, favorites: 0, inquiries: 0, byProperty: {} });
       setBookings([]);
       return;
     }
     const { data: profile, error: profileError } = await client
       .from("profiles")
-      .select("name,role")
+      .select("name,role,agency_name,phone,whatsapp,bio,show_phone,show_whatsapp")
       .eq("id", authUser.id)
       .single();
     if (profileError) throw profileError;
@@ -171,7 +188,16 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       email: authUser.email || "",
       role: profile.role,
     });
-    const [fav, inq, rep, book, own, events] = await Promise.all([
+    setSellerProfile({
+      name: profile.name,
+      agencyName: profile.agency_name || "",
+      phone: profile.phone || "",
+      whatsapp: profile.whatsapp || "",
+      bio: profile.bio || "",
+      showPhone: Boolean(profile.show_phone),
+      showWhatsapp: Boolean(profile.show_whatsapp),
+    });
+    const [fav, inq, rep, book, own, events, reviewData] = await Promise.all([
       client.from("favorites").select("property_id"),
       call("/api/inquiries"),
       client
@@ -188,6 +214,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         .from("analytics_events")
         .select("property_id,event_type")
         .in("event_type", ["view", "favorite", "inquiry"]),
+      call("/api/reviews"),
     ]);
     setFavorites((fav.data || []).map((x: { property_id: string }) => x.property_id));
     setInquiries(
@@ -216,12 +243,27 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         id: x.id,
         propertyId: x.property_id,
         propertyTitle: x.properties?.title || "Stay",
-        guestName: "Guest",
+        guestName: x.guest?.name || "Guest",
+        guestId: x.guest_id,
+        hostId: x.host_id,
         checkIn: x.check_in,
         checkOut: x.check_out,
         guestCount: x.guest_count,
         message: x.message,
         status: x.status,
+        createdAt: x.created_at,
+      })),
+    );
+    setReviews(
+      (reviewData.data || []).map((x: any) => ({
+        id: x.id,
+        propertyId: x.property_id,
+        propertyTitle: x.properties?.title || "Stay",
+        bookingRequestId: x.booking_request_id,
+        rating: x.rating,
+        title: x.title,
+        text: x.review_text,
+        stayType: x.stay_type,
         createdAt: x.created_at,
       })),
     );
@@ -283,6 +325,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     () => ({
       ready,
       user,
+      sellerProfile,
       favorites,
       inquiries,
       reports,
@@ -381,6 +424,25 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           });
           await refresh();
         }),
+      updateSellerProfile: async (profile) =>
+        safely(async () => {
+          if (!client || !user) throw new Error("Please sign in to continue");
+          const { error } = await client
+            .from("profiles")
+            .update({
+              name: profile.name.trim(),
+              agency_name: profile.agencyName.trim() || null,
+              phone: profile.phone.trim() || null,
+              whatsapp: profile.whatsapp.trim() || null,
+              bio: profile.bio.trim() || null,
+              show_phone: profile.showPhone,
+              show_whatsapp: profile.showWhatsapp,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", user.id);
+          if (error) throw error;
+          await refresh();
+        }),
       addListing: async (x) => {
         const json = await call("/api/properties", {
           method: "POST",
@@ -411,20 +473,26 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
           });
           await refresh();
         }),
-      addReview: async (x) => {
-        setReviews((v) => [
-          {
-            ...x,
-            id: crypto.randomUUID(),
-            createdAt: new Date().toISOString(),
-          },
-          ...v,
-        ]);
-      },
+      addReview: async (x) =>
+        safely(async () => {
+          await call("/api/reviews", {
+            method: "POST",
+            body: JSON.stringify({
+              property_id: x.propertyId,
+              booking_request_id: x.bookingRequestId,
+              rating: x.rating,
+              title: x.title,
+              review_text: x.text,
+              stay_type: x.stayType,
+            }),
+          });
+          await refresh();
+        }),
     }),
     [
       ready,
       user,
+      sellerProfile,
       favorites,
       inquiries,
       reports,

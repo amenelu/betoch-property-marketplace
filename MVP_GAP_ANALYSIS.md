@@ -13,7 +13,7 @@ Betoch's Supabase-backed build is deployed at `https://betoch-property-marketpla
 1. Register and confirm the project owner's account, then run `npm run promote-admin -- owner@example.com` to create the first administrator. Public registration correctly excludes the admin role.
 2. Complete production email-confirmation and password-reset delivery tests with a real inbox; disposable confirmed-owner login/session/property creation already pass.
 3. Publish the first real listing so catalogue, favorite, inquiry, report and booking journeys can be verified with production UUID records.
-4. Finish seller profile, listing editing/submission, images and persisted analytics; the main seller table is database-backed but profile/analytics sections still contain placeholder values.
+4. Finish listing submission, images and complete persisted analytics; seller profiles, listing editing and seller summary cards are database-backed.
 
 ## Public marketplace gaps
 
@@ -23,7 +23,7 @@ Betoch's Supabase-backed build is deployed at `https://betoch-property-marketpla
 | Availability search | Exclude blocked, reserved and maintenance date ranges; enforce minimum/maximum stay during search and request creation. |
 | Real map | Select a provider, add geocoding/address search, draggable markers, bounds search, selected-card synchronization and exact/approximate privacy behavior. |
 | Property gallery | Add selectable gallery/lightbox, database images, loading/error states and unavailable/private listing handling. |
-| Reviews | Persist review submission through an API, show property/host reviews, and recalculate host rating/review count from completed-booking reviews. |
+| Reviews | Show persisted property/host reviews publicly and recalculate host rating/review count from completed-booking reviews. |
 | Wishlists | Favorites exist, but named collections such as “Bole Apartments” or “Investment Properties” do not. |
 | SEO | Generate sitemap and property metadata from published database records and return noindex/404 for non-public listings. |
 
@@ -31,7 +31,7 @@ Betoch's Supabase-backed build is deployed at `https://betoch-property-marketpla
 
 | Area | Remaining work |
 |---|---|
-| Account settings | Add a buyer account page and database-backed owner/broker profile editor for name, phone, WhatsApp, agency, bio and contact visibility. |
+| Account settings | Add a buyer account page. The owner/broker profile editor is database-backed. |
 | Email delivery | Verify confirmation and password-reset templates, redirect URLs, sender identity and deliverability in production. |
 | Guest verification | Expose email/phone verification state; phone verification remains optional until a phone provider is selected. |
 
@@ -40,7 +40,7 @@ Betoch's Supabase-backed build is deployed at `https://betoch-property-marketpla
 | Area | Remaining work |
 |---|---|
 | Listing workflow | Persist full property/stay fields, validation and status transitions; add explicit “submit for review” after saving a draft. |
-| Editing/resubmission | Connect the edit page to owner-authorized database reads/updates, show rejection reasons and support resubmission. |
+| Editing/resubmission | Show rejection reasons and support explicit resubmission; owner-authorized database reads and updates are connected. |
 | Delete/archive | Add confirmation UI; archive published listings by default and reserve permanent deletion for drafts/admin use. |
 | Photographs | Connect the existing image APIs to the UI; add client compression/EXIF removal, thumbnails, upload progress, reorder, primary selection, retry and 20-image enforcement. |
 | Stay availability | Build the host calendar editor for available/blocked/maintenance ranges and minimum/maximum stays. |
@@ -61,7 +61,7 @@ Betoch's Supabase-backed build is deployed at `https://betoch-property-marketpla
 
 ## Backend and security gaps
 
-- Add the missing property-review API and database-backed host-rating calculation.
+- Add database-backed host-rating calculation from persisted property reviews.
 - Tighten booking status RLS so guests can only cancel and hosts can only approve/reject/complete valid transitions at the database level, not only in the route handler.
 - Add rate limiting for authentication, inquiries, reports, booking requests, uploads and analytics.
 - Replace hand-written validation with shared typed schemas and response allowlists.

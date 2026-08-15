@@ -21,17 +21,10 @@ const sellerLinks = [
   "Analytics",
   "Profile",
 ] as const;
-const adminLinks = [
-  "Overview",
-  "Properties",
-  "Users",
-  "Verification",
-  "Reports",
-] as const;
 const icons = [LayoutDashboard, Home, MessageCircle, ShieldCheck, Users];
-export function DashboardShell({ admin = false }: { admin?: boolean }) {
-  const [view, setView] = useState<string>(admin ? "Overview" : "My listings");
-  const links = admin ? adminLinks : sellerLinks;
+export function DashboardShell() {
+  const [view, setView] = useState<string>("My listings");
+  const links = sellerLinks;
   return (
     <div className="min-h-screen bg-[#f6f4ee]">
       <aside className="fixed inset-y-0 z-20 hidden w-64 bg-[#173c34] p-6 text-white lg:block">
@@ -43,7 +36,7 @@ export function DashboardShell({ admin = false }: { admin?: boolean }) {
           Betoch
         </Link>
         <p className="mt-10 text-[10px] font-bold uppercase tracking-[.2em] text-white/40">
-          {admin ? "Administration" : "Seller workspace"}
+          Seller workspace
         </p>
         <nav className="mt-4 space-y-1">
           {links.map((x, i) => {
@@ -69,28 +62,22 @@ export function DashboardShell({ admin = false }: { admin?: boolean }) {
         <header className="flex h-20 items-center justify-between border-b border-stone-200 bg-white px-5 lg:px-10">
           <div>
             <p className="text-xs text-stone-500">
-              {admin ? "Admin workspace" : "Seller workspace"}
+              Seller workspace
             </p>
             <h1 className="font-serif text-xl font-semibold text-[#173c34]">
               {view}
             </h1>
           </div>
-          {admin ? (
-            <Link href="/" className="text-sm font-semibold text-[#173c34]">
-              View marketplace
-            </Link>
-          ) : (
-            <Link
-              href="/dashboard/new"
-              className="flex min-h-11 items-center gap-2 rounded-full bg-[#d85d3f] px-4 text-sm font-bold text-white"
-            >
-              <Plus size={16} />
-              New listing
-            </Link>
-          )}
+          <Link
+            href="/dashboard/new"
+            className="flex min-h-11 items-center gap-2 rounded-full bg-[#d85d3f] px-4 text-sm font-bold text-white"
+          >
+            <Plus size={16} />
+            New listing
+          </Link>
         </header>
         <div className="p-5 lg:p-10">
-          {admin ? <AdminContent view={view} /> : <SellerContent view={view} />}
+          <SellerContent view={view} />
         </div>
         <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t bg-white p-2 lg:hidden">
           {links.map((x, i) => {
@@ -115,7 +102,16 @@ export function DashboardShell({ admin = false }: { admin?: boolean }) {
   );
 }
 function SellerContent({ view }: { view: string }) {
-  const { inquiries, updateInquiry, user, listings, sellerAnalytics } = useDemo();
+  const {
+    inquiries,
+    updateInquiry,
+    listings,
+    sellerAnalytics,
+    sellerProfile,
+    updateSellerProfile,
+  } = useDemo();
+  const [profileNotice, setProfileNotice] = useState("");
+  const [profileBusy, setProfileBusy] = useState(false);
   const sellerInquiries = inquiries.filter((inquiry) =>
     listings.some((listing) => listing.id === inquiry.propertyId),
   );
@@ -219,36 +215,58 @@ function SellerContent({ view }: { view: string }) {
     return (
       <Panel title="Seller profile" intro="Control the information buyers see.">
         <form
+          key={JSON.stringify(sellerProfile)}
           className="grid max-w-2xl gap-5 sm:grid-cols-2"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            alert("Profile saved");
+            setProfileBusy(true);
+            setProfileNotice("");
+            const form = new FormData(e.currentTarget);
+            try {
+              await updateSellerProfile({
+                name: String(form.get("name")),
+                agencyName: String(form.get("agencyName")),
+                phone: String(form.get("phone")),
+                whatsapp: String(form.get("whatsapp")),
+                bio: String(form.get("bio")),
+                showPhone: form.get("showPhone") === "on",
+                showWhatsapp: form.get("showWhatsapp") === "on",
+              });
+              setProfileNotice("Profile saved.");
+            } catch (error) {
+              setProfileNotice(error instanceof Error ? error.message : "Unable to save profile");
+            } finally {
+              setProfileBusy(false);
+            }
           }}
         >
           <Field
+            name="name"
             label="Display name"
-            defaultValue={user?.name || "Mekdes Tesfaye"}
+            defaultValue={sellerProfile?.name || ""}
           />
-          <Field label="Agency" defaultValue="Abay Homes" />
-          <Field label="Phone" defaultValue="+251 911 234 567" />
-          <Field label="WhatsApp" defaultValue="+251 911 234 567" />
+          <Field name="agencyName" label="Agency" defaultValue={sellerProfile?.agencyName || ""} required={false} />
+          <Field name="phone" label="Phone" defaultValue={sellerProfile?.phone || ""} required={false} />
+          <Field name="whatsapp" label="WhatsApp" defaultValue={sellerProfile?.whatsapp || ""} required={false} />
           <label className="sm:col-span-2 text-sm font-semibold">
             Bio
             <textarea
+              name="bio"
               className="mt-2 h-28 w-full rounded-xl border p-3 font-normal"
-              defaultValue="Residential property broker serving Addis Ababa."
+              defaultValue={sellerProfile?.bio || ""}
             />
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" defaultChecked />
+            <input name="showPhone" type="checkbox" defaultChecked={sellerProfile?.showPhone} />
             Show phone publicly
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" defaultChecked />
+            <input name="showWhatsapp" type="checkbox" defaultChecked={sellerProfile?.showWhatsapp} />
             Show WhatsApp publicly
           </label>
-          <button className="min-h-11 rounded-full bg-[#173c34] px-5 font-bold text-white sm:col-span-2 sm:w-fit">
-            Save profile
+          {profileNotice ? <p role="status" className="text-sm text-[#287864] sm:col-span-2">{profileNotice}</p> : null}
+          <button disabled={profileBusy} className="min-h-11 rounded-full bg-[#173c34] px-5 font-bold text-white disabled:opacity-60 sm:col-span-2 sm:w-fit">
+            {profileBusy ? "Saving…" : "Save profile"}
           </button>
         </form>
       </Panel>
@@ -635,16 +653,22 @@ function Empty({ title, text }: { title: string; text: string }) {
   );
 }
 function Field({
+  name,
   label,
   defaultValue,
+  required = true,
 }: {
+  name: string;
   label: string;
   defaultValue: string;
+  required?: boolean;
 }) {
   return (
     <label className="text-sm font-semibold">
       {label}
       <input
+        name={name}
+        required={required}
         defaultValue={defaultValue}
         className="mt-2 h-12 w-full rounded-xl border px-3 font-normal"
       />
