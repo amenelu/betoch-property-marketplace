@@ -1,2 +1,66 @@
-import {Header} from "@/components/header";import {Footer} from "@/components/footer";import {PropertyCard} from "@/components/property-card";import {ShieldCheck,MapPin} from "@/components/icons";import {properties} from "@/lib/data";
-export default function SellerProfile({params}:{params:{id:string}}){const seller=properties.find(p=>p.seller.id===params.id)?.seller||properties[0].seller;const listings=properties.filter(p=>p.seller.id===seller.id);return <><Header/><main><section className="bg-[#173c34] text-white"><div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-14 sm:flex-row sm:items-center lg:px-8"><div className="grid h-24 w-24 place-items-center rounded-full bg-[#e9b469] font-serif text-4xl font-bold text-[#173c34]">{seller.name[0]}</div><div><div className="flex items-center gap-2"><h1 className="font-serif text-4xl font-semibold">{seller.name}</h1>{seller.verified?<ShieldCheck className="text-[#e9b469]"/>:null}</div><p className="mt-2 text-white/70">{seller.role==="broker"?`${seller.agency} · Verified broker`:"Property owner"}</p><p className="mt-2 flex items-center gap-2 text-sm text-white/60"><MapPin size={15}/>Addis Ababa · Member since {new Date(seller.memberSince).getFullYear()}</p></div></div></section><section className="mx-auto max-w-7xl px-5 py-14 lg:px-8"><div className="max-w-2xl"><p className="eyebrow">About the seller</p><p className="mt-3 leading-7 text-stone-600">Helping buyers and renters find well-presented properties across Addis Ababa with clear information and responsive service.</p></div><h2 className="mt-12 font-serif text-3xl font-semibold text-[#173c34]">Active listings ({listings.length})</h2><div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">{listings.map(p=><PropertyCard key={p.id} property={p}/>)}</div></section></main><Footer/></>}
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { PropertyCard } from "@/components/property-card";
+import { ShieldCheck, MapPin } from "@/components/icons";
+import { getSellerWithListings } from "@/lib/property-repository";
+import { notFound } from "next/navigation";
+export default async function SellerProfile({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const { seller, listings } = await getSellerWithListings(params.id);
+  if (!seller) notFound();
+  return (
+    <>
+      <Header />
+      <main>
+        <section className="bg-[#173c34] text-white">
+          <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-14 sm:flex-row sm:items-center lg:px-8">
+            <div className="grid h-24 w-24 place-items-center rounded-full bg-[#e9b469] font-serif text-4xl font-bold text-[#173c34]">
+              {seller.name[0]}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-serif text-4xl font-semibold">
+                  {seller.name}
+                </h1>
+                {seller.verified ? (
+                  <ShieldCheck className="text-[#e9b469]" />
+                ) : null}
+              </div>
+              <p className="mt-2 text-white/70">
+                {seller.role === "broker"
+                  ? `${seller.agency} · Verified broker`
+                  : "Property owner"}
+              </p>
+              <p className="mt-2 flex items-center gap-2 text-sm text-white/60">
+                <MapPin size={15} />
+                Addis Ababa · Member since{" "}
+                {new Date(seller.memberSince).getFullYear()}
+              </p>
+            </div>
+          </div>
+        </section>
+        <section className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
+          <div className="max-w-2xl">
+            <p className="eyebrow">About the seller</p>
+            <p className="mt-3 leading-7 text-stone-600">
+              Helping buyers and renters find well-presented properties across
+              Addis Ababa with clear information and responsive service.
+            </p>
+          </div>
+          <h2 className="mt-12 font-serif text-3xl font-semibold text-[#173c34]">
+            Active listings ({listings.length})
+          </h2>
+          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {listings.map((p) => (
+              <PropertyCard key={p.id} property={p} />
+            ))}
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
+  );
+}

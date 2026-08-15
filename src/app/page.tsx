@@ -1,2 +1,149 @@
-import Link from "next/link"; import Image from "next/image"; import { Header } from "@/components/header"; import { PropertyCard } from "@/components/property-card"; import { ArrowRight, MapPin, Search, ShieldCheck } from "@/components/icons"; import { neighborhoods, properties } from "@/lib/data";
-export default function HomePage(){ return <><Header/><main><section className="relative overflow-hidden bg-[#183c34] text-white"><div className="absolute inset-0 opacity-25"><Image src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=2000&q=80" alt="Addis Ababa home" fill priority className="object-cover"/></div><div className="absolute inset-0 bg-gradient-to-r from-[#183c34] via-[#183c34]/90 to-[#183c34]/20"/><div className="relative mx-auto max-w-7xl px-5 py-20 sm:py-28 lg:px-8 lg:py-36"><p className="mb-5 text-xs font-bold uppercase tracking-[.24em] text-[#f2c779]">Homes with more certainty</p><h1 className="max-w-3xl font-serif text-5xl font-semibold leading-[1.04] sm:text-7xl">Find your place<br/>in Addis Ababa.</h1><p className="mt-6 max-w-xl text-base leading-7 text-white/75 sm:text-lg">Discover thoughtfully presented homes, understand asking prices, and see exactly what has been verified.</p><form action="/properties" className="mt-10 grid max-w-4xl gap-2 rounded-2xl bg-white p-2 text-stone-800 shadow-2xl sm:grid-cols-[130px_1fr_190px_auto]"><select name="listingType" aria-label="Listing type" className="h-14 rounded-xl bg-[#f5f3ed] px-4 text-sm font-bold outline-none"><option value="sale">Buy</option><option value="rent">Rent</option></select><label className="flex h-14 items-center gap-2 px-4"><MapPin size={18} className="text-[#d85d3f]"/><input name="location" placeholder="Neighborhood or subcity" className="w-full bg-transparent text-sm outline-none"/></label><select name="propertyType" aria-label="Property type" className="h-14 border-l border-stone-200 px-4 text-sm outline-none"><option value="">Any property</option><option>Apartment</option><option>House</option><option>Villa</option><option>Office</option></select><button className="flex h-14 items-center justify-center gap-2 rounded-xl bg-[#d85d3f] px-7 font-bold text-white"><Search size={18}/>Search</button></form></div></section><section className="border-b border-stone-200 bg-white"><div className="mx-auto grid max-w-7xl gap-6 px-5 py-7 text-sm text-stone-600 sm:grid-cols-3 lg:px-8"><p className="flex items-center gap-3"><ShieldCheck className="text-[#287864]"/>Manual verification, clearly explained</p><p className="flex items-center gap-3"><Search className="text-[#287864]"/>Compare asking price per square metre</p><p className="flex items-center gap-3"><MapPin className="text-[#287864]"/>Privacy-first approximate locations</p></div></section><section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24"><div className="mb-10 flex items-end justify-between"><div><p className="eyebrow">Handpicked in Addis</p><h2 className="section-title">Featured properties</h2></div><Link href="/properties" className="hidden items-center gap-2 text-sm font-bold text-[#183c34] sm:flex">View all <ArrowRight size={16}/></Link></div><div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{properties.slice(0,3).map(p=><PropertyCard key={p.id} property={p}/>)}</div></section><section className="bg-[#eeeae0]"><div className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24"><p className="eyebrow">Explore the city</p><h2 className="section-title">Browse by neighborhood</h2><div className="mt-8 flex flex-wrap gap-3">{neighborhoods.map((n,i)=><Link key={n} href={`/properties?location=${encodeURIComponent(n)}`} className={`rounded-full border px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${i<3?"border-[#183c34] bg-[#183c34] text-white":"border-stone-300 bg-white text-stone-700"}`}>{n}</Link>)}</div></div></section><section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24"><p className="eyebrow">Fresh to market</p><h2 className="section-title">Recently added</h2><div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">{properties.slice(3).map(p=><PropertyCard key={p.id} property={p}/>)}</div></section></main><footer className="bg-[#102c26] px-5 py-12 text-sm text-white/60"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 sm:flex-row"><div><p className="font-serif text-xl font-bold text-white">Betoch</p><p className="mt-2">A clearer way to find property in Ethiopia.</p></div><p>© 2026 Betoch · Addis Ababa, Ethiopia</p></div></footer></>}
+import Link from "next/link";
+import Image from "next/image";
+import { Header } from "@/components/header";
+import { PropertyCard } from "@/components/property-card";
+import { ArrowRight, MapPin, Search, ShieldCheck } from "@/components/icons";
+import { neighborhoods } from "@/lib/data";
+import { getPublishedProperties } from "@/lib/property-repository";
+export default async function HomePage() {
+  const properties = await getPublishedProperties();
+  return (
+    <>
+      <Header />
+      <main>
+        <section className="relative overflow-hidden bg-[#183c34] text-white">
+          <div className="absolute inset-0 opacity-25">
+            <Image
+              src="https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=2000&q=80"
+              alt="Addis Ababa home"
+              fill
+              priority
+              className="object-cover"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#183c34] via-[#183c34]/90 to-[#183c34]/20" />
+          <div className="relative mx-auto max-w-7xl px-5 py-20 sm:py-28 lg:px-8 lg:py-36">
+            <p className="mb-5 text-xs font-bold uppercase tracking-[.24em] text-[#f2c779]">
+              Homes with more certainty
+            </p>
+            <h1 className="max-w-3xl font-serif text-5xl font-semibold leading-[1.04] sm:text-7xl">
+              Find your place
+              <br />
+              in Addis Ababa.
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-7 text-white/75 sm:text-lg">
+              Discover thoughtfully presented homes, understand asking prices,
+              and see exactly what has been verified.
+            </p>
+            <form
+              action="/properties"
+              className="mt-10 grid max-w-4xl gap-2 rounded-2xl bg-white p-2 text-stone-800 shadow-2xl sm:grid-cols-[130px_1fr_190px_auto]"
+            >
+              <select
+                name="listingType"
+                aria-label="Listing type"
+                className="h-14 rounded-xl bg-[#f5f3ed] px-4 text-sm font-bold outline-none"
+              >
+                <option value="sale">Buy</option>
+                <option value="rent">Rent</option>
+              </select>
+              <label className="flex h-14 items-center gap-2 px-4">
+                <MapPin size={18} className="text-[#d85d3f]" />
+                <input
+                  name="location"
+                  placeholder="Neighborhood or subcity"
+                  className="w-full bg-transparent text-sm outline-none"
+                />
+              </label>
+              <select
+                name="propertyType"
+                aria-label="Property type"
+                className="h-14 border-l border-stone-200 px-4 text-sm outline-none"
+              >
+                <option value="">Any property</option>
+                <option>Apartment</option>
+                <option>House</option>
+                <option>Villa</option>
+                <option>Office</option>
+              </select>
+              <button className="flex h-14 items-center justify-center gap-2 rounded-xl bg-[#d85d3f] px-7 font-bold text-white">
+                <Search size={18} />
+                Search
+              </button>
+            </form>
+          </div>
+        </section>
+        <section className="border-b border-stone-200 bg-white">
+          <div className="mx-auto grid max-w-7xl gap-6 px-5 py-7 text-sm text-stone-600 sm:grid-cols-3 lg:px-8">
+            <p className="flex items-center gap-3">
+              <ShieldCheck className="text-[#287864]" />
+              Manual verification, clearly explained
+            </p>
+            <p className="flex items-center gap-3">
+              <Search className="text-[#287864]" />
+              Compare asking price per square metre
+            </p>
+            <p className="flex items-center gap-3">
+              <MapPin className="text-[#287864]" />
+              Privacy-first approximate locations
+            </p>
+          </div>
+        </section>
+        <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">
+          <div className="mb-10 flex items-end justify-between">
+            <div>
+              <p className="eyebrow">Handpicked in Addis</p>
+              <h2 className="section-title">Featured properties</h2>
+            </div>
+            <Link
+              href="/properties"
+              className="hidden items-center gap-2 text-sm font-bold text-[#183c34] sm:flex"
+            >
+              View all <ArrowRight size={16} />
+            </Link>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {properties.slice(0, 3).map((p) => (
+              <PropertyCard key={p.id} property={p} />
+            ))}
+          </div>
+        </section>
+        <section className="bg-[#eeeae0]">
+          <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">
+            <p className="eyebrow">Explore the city</p>
+            <h2 className="section-title">Browse by neighborhood</h2>
+            <div className="mt-8 flex flex-wrap gap-3">
+              {neighborhoods.map((n, i) => (
+                <Link
+                  key={n}
+                  href={`/properties?location=${encodeURIComponent(n)}`}
+                  className={`rounded-full border px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${i < 3 ? "border-[#183c34] bg-[#183c34] text-white" : "border-stone-300 bg-white text-stone-700"}`}
+                >
+                  {n}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+        <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-24">
+          <p className="eyebrow">Fresh to market</p>
+          <h2 className="section-title">Recently added</h2>
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {properties.slice(3).map((p) => (
+              <PropertyCard key={p.id} property={p} />
+            ))}
+          </div>
+        </section>
+      </main>
+      <footer className="bg-[#102c26] px-5 py-12 text-sm text-white/60">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 sm:flex-row">
+          <div>
+            <p className="font-serif text-xl font-bold text-white">Betoch</p>
+            <p className="mt-2">A clearer way to find property in Ethiopia.</p>
+          </div>
+          <p>© 2026 Betoch · Addis Ababa, Ethiopia</p>
+        </div>
+      </footer>
+    </>
+  );
+}

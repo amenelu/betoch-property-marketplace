@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import {createBrowserClient} from "@supabase/ssr";
 let browserClient: any = null;
 export function getBrowserClient(): any {
   if (typeof window === "undefined") return null;
@@ -6,13 +7,7 @@ export function getBrowserClient(): any {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   if (!browserClient)
-    browserClient = createClient(url, key, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    });
+    browserClient = createBrowserClient(url,key);
   return browserClient;
 }
 export function getServiceClient() {

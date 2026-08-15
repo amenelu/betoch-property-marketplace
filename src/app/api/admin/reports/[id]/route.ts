@@ -1,1 +1,30 @@
-import {NextRequest,NextResponse} from "next/server";import {authenticated} from "@/lib/api";export async function PATCH(req:NextRequest,{params}:{params:{id:string}}){const a=await authenticated(req);if(!a)return NextResponse.json({error:"Authentication required"},{status:401});const {status}=await req.json();if(!["reviewing","resolved","dismissed"].includes(status))return NextResponse.json({error:"Invalid status"},{status:400});const {data,error}=await a.client.from("property_reports").update({status,resolved_at:["resolved","dismissed"].includes(status)?new Date().toISOString():null}).eq("id",params.id).select().single();return error?NextResponse.json({error:error.message},{status:403}):NextResponse.json({data})}
+import { NextRequest, NextResponse } from "next/server";
+import { adminAuthenticated } from "@/lib/api";
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  const a = await adminAuthenticated(req);
+  if (!a)
+    return NextResponse.json(
+      { error: "Authentication required" },
+      { status: 401 },
+    );
+  const { status } = await req.json();
+  if (!["reviewing", "resolved", "dismissed"].includes(status))
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  const { data, error } = await a.client
+    .from("property_reports")
+    .update({
+      status,
+      resolved_at: ["resolved", "dismissed"].includes(status)
+        ? new Date().toISOString()
+        : null,
+    })
+    .eq("id", params.id)
+    .select()
+    .single();
+  return error
+    ? NextResponse.json({ error: error.message }, { status: 403 })
+    : NextResponse.json({ data });
+}

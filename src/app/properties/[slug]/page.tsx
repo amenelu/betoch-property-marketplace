@@ -1,5 +1,318 @@
-import type {Metadata} from "next";import Image from "next/image";import Link from "next/link";import {notFound} from "next/navigation";import {Header} from "@/components/header";import {Footer} from "@/components/footer";import {PropertyActions} from "@/components/property-actions";import {StayActions} from "@/components/stay-actions";import {properties,formatPrice} from "@/lib/data";import {Bath,BedDouble,Building2,Check,ChevronLeft,MapPin,Maximize,ShieldCheck} from "@/components/icons";
-export function generateStaticParams(){return properties.map(p=>({slug:p.slug}))}export function generateMetadata({params}:{params:{slug:string}}):Metadata{const p=properties.find(x=>x.slug===params.slug);return p?{title:p.title,description:p.description}:{title:"Property not found"}}
-const mode:Record<string,string>={sale:"For sale",rent:"Long-term rent",long_term_rent:"Long-term rent",medium_term_rent:"Medium-term rent",short_term_stay:"Short stay"};
-export default function PropertyPage({params}:{params:{slug:string}}){const p=properties.find(x=>x.slug===params.slug);if(!p)notFound();const stay=["short_term_stay","medium_term_rent"].includes(p.listingType);const amenities=[[p.furnished,"Furnished"],[p.hasGenerator,"Generator"],[p.hasSolar,"Solar"],[p.hasBackupBattery,"Backup battery"],[p.hasWaterTank,p.waterTankCapacity?`Water tank · ${p.waterTankCapacity}L`:"Water tank"],[p.fiberInternet,"Fiber internet"],[p.backupInternet,"Backup internet"],[p.hasSecurity,"24/7 security"],[p.gatedCompound,"Gated compound"],[p.cctv,"CCTV"],[p.workspace,"Workspace"],[p.kitchenEquipped,"Equipped kitchen"],[p.washingMachine,"Washing machine"],[p.hasBalcony,"Balcony"],[p.hasGarden,"Garden"],[p.parkingSpaces>0,`${p.parkingSpaces} parking`]];return <><Header/><main className="pb-16"><div className="mx-auto max-w-7xl px-5 py-6 lg:px-8"><Link href="/properties" className="flex items-center gap-2 text-sm text-stone-600"><ChevronLeft size={17}/>Back to properties</Link></div><section className="mx-auto grid h-[360px] max-w-7xl gap-2 px-5 sm:h-[520px] lg:grid-cols-2 lg:px-8"><div className="relative overflow-hidden rounded-2xl"><Image src={p.images[0]} alt={p.title} fill priority sizes="(max-width:1024px) 100vw, 50vw" className="object-cover"/></div><div className="hidden grid-cols-2 gap-2 lg:grid">{p.images.slice(1).map((im,i)=><div className="relative overflow-hidden rounded-2xl" key={im}><Image src={im} alt={`${p.title} photo ${i+2}`} fill sizes="25vw" className="object-cover"/></div>)}</div></section><div className="mx-auto mt-10 grid max-w-7xl gap-12 px-5 lg:grid-cols-[1fr_370px] lg:px-8"><article><p className="eyebrow">{mode[p.listingType]} · {p.propertyType}</p><h1 className="mt-2 font-serif text-4xl font-semibold text-[#183c34] sm:text-5xl">{p.title}</h1><p className="mt-3 flex items-center gap-2 text-stone-500"><MapPin size={17}/>{p.neighborhood}, {p.city} · approximate location</p><p className="mt-7 text-3xl font-bold text-[#183c34]">{formatPrice(p.price)}{p.listingType!=="sale"?<span className="text-base font-normal text-stone-500"> / {p.listingType==="short_term_stay"?"night":p.listingType==="medium_term_rent"?"week":"month"}</span>:null}</p><div className="mt-7 flex flex-wrap gap-6 border-y py-6 text-sm font-semibold">{p.bedrooms>0?<span className="flex gap-2"><BedDouble/>{p.bedrooms} bedrooms</span>:null}<span className="flex gap-2"><Bath/>{p.bathrooms} bathrooms</span><span className="flex gap-2"><Maximize/>{p.areaSqm} m²</span>{p.maxGuests?<span>{p.maxGuests} guests</span>:null}</div><Section title="About this property"><p className="leading-7 text-stone-600">{p.description}</p></Section><Section title="Amenities"><div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{amenities.filter(x=>x[0]).map(x=><p key={String(x[1])} className="flex items-center gap-2 text-sm"><Check size={17} className="text-[#287864]"/>{x[1]}</p>)}</div></Section>{p.rules?<Section title="Stay rules"><div className="grid gap-3 text-sm sm:grid-cols-2"><p>Check-in: <b>{p.rules.checkInTime}</b></p><p>Check-out: <b>{p.rules.checkOutTime}</b></p><p>Pets: <b>{p.rules.petsAllowed?"Allowed":"Not allowed"}</b></p><p>Smoking: <b>{p.rules.smokingAllowed?"Allowed":"Not allowed"}</b></p><p>Parties: <b>{p.rules.partiesAllowed?"Allowed":"Not allowed"}</b></p><p>Children: <b>{p.rules.childrenAllowed?"Allowed":"Not allowed"}</b></p></div></Section>:null}<Section title={p.listingType==="sale"?"Asking price per m²":"Pricing"}><div className="rounded-2xl bg-[#eeeae0] p-6">{p.prices?.length?p.prices.map(x=><p key={x.type} className="mb-2 flex justify-between capitalize"><span>{x.type.replaceAll("_"," ")}</span><b>{formatPrice(x.amount)}</b></p>):<p className="text-2xl font-bold text-[#183c34]">{formatPrice(Math.round(p.price/p.areaSqm))} / m²</p>}<p className="mt-3 text-xs text-stone-500">Fixed host pricing. Betoch does not process payment.</p></div></Section></article><aside className="space-y-4"><div className="rounded-2xl border bg-white p-6"><Link href={`/sellers/${p.seller.id}`} className="flex items-center gap-3 border-b pb-5"><div className="grid h-12 w-12 place-items-center rounded-full bg-[#e9b469] font-serif text-xl font-bold">{p.seller.name[0]}</div><div><p className="font-bold">{p.seller.name}</p><p className="text-xs text-stone-500">{p.seller.agency||"Property owner"}</p></div>{p.seller.verified?<ShieldCheck className="ml-auto text-[#287864]"/>:null}</Link>{p.seller.hostRating?<div className="grid grid-cols-2 gap-3 py-5 text-sm"><p><b>{p.seller.hostRating} ★</b><br/><span className="text-xs text-stone-500">{p.seller.reviewCount} reviews</span></p><p><b>{p.seller.responseRate}%</b><br/><span className="text-xs text-stone-500">Responds {p.seller.responseTime}</span></p></div>:null}<div className="space-y-2 border-t pt-4 text-xs"><Badge ok={p.seller.verified}>Host verified</Badge><Badge ok={p.verifiedLocation}>Location verified</Badge><Badge ok={p.verifiedPhotos}>Photos verified</Badge><Badge ok={p.verifiedAmenities}>Amenities reviewed</Badge></div></div>{stay?<StayActions propertyId={p.id} propertyTitle={p.title} nightlyPrice={p.prices?.find(x=>x.type==="nightly_price")?.amount||p.price} maxGuests={p.maxGuests}/>:null}<PropertyActions propertyId={p.id} propertyTitle={p.title} phone={p.seller.phone} whatsapp={p.seller.whatsapp}/></aside></div></main><Footer/></>}
-function Section({title,children}:{title:string;children:React.ReactNode}){return <section className="border-b border-stone-200 py-10"><h2 className="mb-5 font-serif text-2xl font-semibold text-[#183c34]">{title}</h2>{children}</section>};function Badge({ok,children}:{ok?:boolean;children:React.ReactNode}){return <p className={`flex gap-2 ${ok?"text-stone-700":"text-stone-400"}`}><span className={`grid h-4 w-4 place-items-center rounded-full ${ok?"bg-[#287864] text-white":"border"}`}>{ok?<Check size={11}/>:null}</span>{children}</p>}
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+import { PropertyActions } from "@/components/property-actions";
+import { StayActions } from "@/components/stay-actions";
+import { formatPrice } from "@/lib/data";
+import { getPublishedProperty } from "@/lib/property-repository";
+import {
+  Bath,
+  BedDouble,
+  Building2,
+  Check,
+  ChevronLeft,
+  MapPin,
+  Maximize,
+  ShieldCheck,
+} from "@/components/icons";
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const p = await getPublishedProperty(params.slug);
+  return p
+    ? { title: p.title, description: p.description }
+    : { title: "Property not found" };
+}
+const mode: Record<string, string> = {
+  sale: "For sale",
+  rent: "Long-term rent",
+  long_term_rent: "Long-term rent",
+  medium_term_rent: "Medium-term rent",
+  short_term_stay: "Short stay",
+};
+export default async function PropertyPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const p = await getPublishedProperty(params.slug);
+  if (!p) notFound();
+  const stay = ["short_term_stay", "medium_term_rent"].includes(p.listingType);
+  const amenities = [
+    [p.furnished, "Furnished"],
+    [p.hasGenerator, "Generator"],
+    [p.hasSolar, "Solar"],
+    [p.hasBackupBattery, "Backup battery"],
+    [
+      p.hasWaterTank,
+      p.waterTankCapacity
+        ? `Water tank · ${p.waterTankCapacity}L`
+        : "Water tank",
+    ],
+    [p.fiberInternet, "Fiber internet"],
+    [p.backupInternet, "Backup internet"],
+    [p.hasSecurity, "24/7 security"],
+    [p.gatedCompound, "Gated compound"],
+    [p.cctv, "CCTV"],
+    [p.workspace, "Workspace"],
+    [p.kitchenEquipped, "Equipped kitchen"],
+    [p.washingMachine, "Washing machine"],
+    [p.hasBalcony, "Balcony"],
+    [p.hasGarden, "Garden"],
+    [p.parkingSpaces > 0, `${p.parkingSpaces} parking`],
+  ];
+  return (
+    <>
+      <Header />
+      <main className="pb-16">
+        <div className="mx-auto max-w-7xl px-5 py-6 lg:px-8">
+          <Link
+            href="/properties"
+            className="flex items-center gap-2 text-sm text-stone-600"
+          >
+            <ChevronLeft size={17} />
+            Back to properties
+          </Link>
+        </div>
+        <section className="mx-auto grid h-[360px] max-w-7xl gap-2 px-5 sm:h-[520px] lg:grid-cols-2 lg:px-8">
+          <div className="relative overflow-hidden rounded-2xl">
+            <Image
+              src={p.images[0]}
+              alt={p.title}
+              fill
+              priority
+              sizes="(max-width:1024px) 100vw, 50vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="hidden grid-cols-2 gap-2 lg:grid">
+            {p.images.slice(1).map((im, i) => (
+              <div className="relative overflow-hidden rounded-2xl" key={im}>
+                <Image
+                  src={im}
+                  alt={`${p.title} photo ${i + 2}`}
+                  fill
+                  sizes="25vw"
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+        <div className="mx-auto mt-10 grid max-w-7xl gap-12 px-5 lg:grid-cols-[1fr_370px] lg:px-8">
+          <article>
+            <p className="eyebrow">
+              {mode[p.listingType]} · {p.propertyType}
+            </p>
+            <h1 className="mt-2 font-serif text-4xl font-semibold text-[#183c34] sm:text-5xl">
+              {p.title}
+            </h1>
+            <p className="mt-3 flex items-center gap-2 text-stone-500">
+              <MapPin size={17} />
+              {p.neighborhood}, {p.city} · approximate location
+            </p>
+            <p className="mt-7 text-3xl font-bold text-[#183c34]">
+              {formatPrice(p.price)}
+              {p.listingType !== "sale" ? (
+                <span className="text-base font-normal text-stone-500">
+                  {" "}
+                  /{" "}
+                  {p.listingType === "short_term_stay"
+                    ? "night"
+                    : p.listingType === "medium_term_rent"
+                      ? "week"
+                      : "month"}
+                </span>
+              ) : null}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-6 border-y py-6 text-sm font-semibold">
+              {p.bedrooms > 0 ? (
+                <span className="flex gap-2">
+                  <BedDouble />
+                  {p.bedrooms} bedrooms
+                </span>
+              ) : null}
+              <span className="flex gap-2">
+                <Bath />
+                {p.bathrooms} bathrooms
+              </span>
+              <span className="flex gap-2">
+                <Maximize />
+                {p.areaSqm} m²
+              </span>
+              {p.maxGuests ? <span>{p.maxGuests} guests</span> : null}
+            </div>
+            <Section title="About this property">
+              <p className="leading-7 text-stone-600">{p.description}</p>
+            </Section>
+            <Section title="Amenities">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {amenities
+                  .filter((x) => x[0])
+                  .map((x) => (
+                    <p
+                      key={String(x[1])}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <Check size={17} className="text-[#287864]" />
+                      {x[1]}
+                    </p>
+                  ))}
+              </div>
+            </Section>
+            {p.rules ? (
+              <Section title="Stay rules">
+                <div className="grid gap-3 text-sm sm:grid-cols-2">
+                  <p>
+                    Check-in: <b>{p.rules.checkInTime}</b>
+                  </p>
+                  <p>
+                    Check-out: <b>{p.rules.checkOutTime}</b>
+                  </p>
+                  <p>
+                    Pets:{" "}
+                    <b>{p.rules.petsAllowed ? "Allowed" : "Not allowed"}</b>
+                  </p>
+                  <p>
+                    Smoking:{" "}
+                    <b>{p.rules.smokingAllowed ? "Allowed" : "Not allowed"}</b>
+                  </p>
+                  <p>
+                    Parties:{" "}
+                    <b>{p.rules.partiesAllowed ? "Allowed" : "Not allowed"}</b>
+                  </p>
+                  <p>
+                    Children:{" "}
+                    <b>{p.rules.childrenAllowed ? "Allowed" : "Not allowed"}</b>
+                  </p>
+                </div>
+              </Section>
+            ) : null}
+            <Section
+              title={
+                p.listingType === "sale" ? "Asking price per m²" : "Pricing"
+              }
+            >
+              <div className="rounded-2xl bg-[#eeeae0] p-6">
+                {p.prices?.length ? (
+                  p.prices.map((x) => (
+                    <p
+                      key={x.type}
+                      className="mb-2 flex justify-between capitalize"
+                    >
+                      <span>{x.type.replaceAll("_", " ")}</span>
+                      <b>{formatPrice(x.amount)}</b>
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-2xl font-bold text-[#183c34]">
+                    {formatPrice(Math.round(p.price / p.areaSqm))} / m²
+                  </p>
+                )}
+                <p className="mt-3 text-xs text-stone-500">
+                  Fixed host pricing. Betoch does not process payment.
+                </p>
+              </div>
+            </Section>
+          </article>
+          <aside className="space-y-4">
+            <div className="rounded-2xl border bg-white p-6">
+              <Link
+                href={`/sellers/${p.seller.id}`}
+                className="flex items-center gap-3 border-b pb-5"
+              >
+                <div className="grid h-12 w-12 place-items-center rounded-full bg-[#e9b469] font-serif text-xl font-bold">
+                  {p.seller.name[0]}
+                </div>
+                <div>
+                  <p className="font-bold">{p.seller.name}</p>
+                  <p className="text-xs text-stone-500">
+                    {p.seller.agency || "Property owner"}
+                  </p>
+                </div>
+                {p.seller.verified ? (
+                  <ShieldCheck className="ml-auto text-[#287864]" />
+                ) : null}
+              </Link>
+              {p.seller.hostRating ? (
+                <div className="grid grid-cols-2 gap-3 py-5 text-sm">
+                  <p>
+                    <b>{p.seller.hostRating} ★</b>
+                    <br />
+                    <span className="text-xs text-stone-500">
+                      {p.seller.reviewCount} reviews
+                    </span>
+                  </p>
+                  <p>
+                    <b>{p.seller.responseRate}%</b>
+                    <br />
+                    <span className="text-xs text-stone-500">
+                      Responds {p.seller.responseTime}
+                    </span>
+                  </p>
+                </div>
+              ) : null}
+              <div className="space-y-2 border-t pt-4 text-xs">
+                <Badge ok={p.seller.verified}>Host verified</Badge>
+                <Badge ok={p.verifiedLocation}>Location verified</Badge>
+                <Badge ok={p.verifiedPhotos}>Photos verified</Badge>
+                <Badge ok={p.verifiedAmenities}>Amenities reviewed</Badge>
+              </div>
+            </div>
+            {stay ? (
+              <StayActions
+                propertyId={p.id}
+                propertyTitle={p.title}
+                nightlyPrice={
+                  p.prices?.find((x) => x.type === "nightly_price")?.amount ||
+                  p.price
+                }
+                maxGuests={p.maxGuests}
+              />
+            ) : null}
+            <PropertyActions
+              propertyId={p.id}
+              propertyTitle={p.title}
+              phone={p.seller.phone}
+              whatsapp={p.seller.whatsapp}
+            />
+          </aside>
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-b border-stone-200 py-10">
+      <h2 className="mb-5 font-serif text-2xl font-semibold text-[#183c34]">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+function Badge({ ok, children }: { ok?: boolean; children: React.ReactNode }) {
+  return (
+    <p className={`flex gap-2 ${ok ? "text-stone-700" : "text-stone-400"}`}>
+      <span
+        className={`grid h-4 w-4 place-items-center rounded-full ${ok ? "bg-[#287864] text-white" : "border"}`}
+      >
+        {ok ? <Check size={11} /> : null}
+      </span>
+      {children}
+    </p>
+  );
+}

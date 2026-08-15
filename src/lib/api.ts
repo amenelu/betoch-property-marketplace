@@ -1,3 +1,27 @@
-import {NextRequest,NextResponse} from "next/server";import {getUserClient} from "./supabase";
-export async function authenticated(req:NextRequest){const token=req.headers.get("authorization")?.replace(/^Bearer\s+/i,"");if(!token)return null;const client=getUserClient(token);if(!client)return null;const {data}=await client.auth.getUser(token);return data.user?{client,user:data.user}:null}
-export const unavailable=()=>NextResponse.json({error:"Database is not configured"},{status:503}); export const bad=(errors:unknown)=>NextResponse.json({error:"Validation failed",details:errors},{status:400});
+import { NextRequest, NextResponse } from "next/server";
+import { getUserClient } from "./supabase";
+export async function authenticated(req: NextRequest) {
+  const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  if (!token) return null;
+  const client = getUserClient(token);
+  if (!client) return null;
+  const { data } = await client.auth.getUser(token);
+  return data.user ? { client, user: data.user } : null;
+}
+export async function adminAuthenticated(req: NextRequest) {
+  const auth = await authenticated(req);
+  if (!auth) return null;
+  const { data } = await auth.client
+    .from("profiles")
+    .select("role,suspended_at")
+    .eq("id", auth.user.id)
+    .single();
+  return data?.role === "admin" && !data.suspended_at ? auth : null;
+}
+export const unavailable = () =>
+  NextResponse.json({ error: "Database is not configured" }, { status: 503 });
+export const bad = (errors: unknown) =>
+  NextResponse.json(
+    { error: "Validation failed", details: errors },
+    { status: 400 },
+  );
