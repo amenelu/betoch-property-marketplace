@@ -40,6 +40,12 @@ export type DemoListing = {
   status: "draft" | "pending_review" | "published" | "rejected";
   createdAt: string;
 };
+export type SellerAnalytics = {
+  views: number;
+  favorites: number;
+  inquiries: number;
+  byProperty: Record<string, { views: number; favorites: number; inquiries: number }>;
+};
 export type BookingRequest = {
   id: string;
   propertyId: string;
@@ -69,6 +75,7 @@ type Value = {
   inquiries: Inquiry[];
   reports: Report[];
   listings: DemoListing[];
+  sellerAnalytics: SellerAnalytics;
   bookings: BookingRequest[];
   reviews: Review[];
   error: string;
@@ -108,6 +115,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [inquiries, setInquiries] = useState<Inquiry[]>([]),
     [reports, setReports] = useState<Report[]>([]),
     [listings, setListings] = useState<DemoListing[]>([]),
+    [sellerAnalytics, setSellerAnalytics] = useState<SellerAnalytics>({
+      views: 0, favorites: 0, inquiries: 0, byProperty: {},
+    }),
     [bookings, setBookings] = useState<BookingRequest[]>([]),
     [reviews, setReviews] = useState<Review[]>([]),
     [error, setError] = useState("");
@@ -145,6 +155,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       setInquiries([]);
       setReports([]);
       setListings([]);
+      setSellerAnalytics({ views: 0, favorites: 0, inquiries: 0, byProperty: {} });
       setBookings([]);
       return;
     }
@@ -160,7 +171,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       email: authUser.email || "",
       role: profile.role,
     });
-    const [fav, inq, rep, book, own] = await Promise.all([
+    const [fav, inq, rep, book, own, events] = await Promise.all([
       client.from("favorites").select("property_id"),
       call("/api/inquiries"),
       client
@@ -173,6 +184,10 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         .select("id,title,neighborhood,price,status,created_at")
         .eq("owner_id", authUser.id)
         .order("created_at", { ascending: false }),
+      client
+        .from("analytics_events")
+        .select("property_id,event_type")
+        .in("event_type", ["view", "favorite", "inquiry"]),
     ]);
     setFavorites((fav.data || []).map((x: { property_id: string }) => x.property_id));
     setInquiries(
@@ -220,6 +235,23 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
         createdAt: x.created_at,
       })),
     );
+    const ownedIds = new Set<string>((own.data || []).map((x: any) => String(x.id)));
+    const received = (inq.data || []).filter(
+      (x: any) => x.recipient_id === authUser.id && ownedIds.has(x.property_id),
+    );
+    const byProperty: SellerAnalytics["byProperty"] = {};
+    ownedIds.forEach((id) => {
+      byProperty[id] = { views: 0, favorites: 0, inquiries: 0 };
+    });
+    let views = 0;
+    let favoriteEvents = 0;
+    for (const event of events.data || []) {
+      if (!event.property_id || !ownedIds.has(event.property_id)) continue;
+      if (event.event_type === "view") { views++; byProperty[event.property_id].views++; }
+      if (event.event_type === "favorite") { favoriteEvents++; byProperty[event.property_id].favorites++; }
+    }
+    for (const inquiry of received) byProperty[inquiry.property_id].inquiries++;
+    setSellerAnalytics({ views, favorites: favoriteEvents, inquiries: received.length, byProperty });
   }, [client, call]);
   useEffect(() => {
     if (!client) {
@@ -255,6 +287,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       inquiries,
       reports,
       listings,
+      sellerAnalytics,
       bookings,
       reviews,
       error,
@@ -396,6 +429,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       inquiries,
       reports,
       listings,
+      sellerAnalytics,
       bookings,
       reviews,
       error,

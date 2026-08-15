@@ -115,15 +115,20 @@ export function DashboardShell({ admin = false }: { admin?: boolean }) {
   );
 }
 function SellerContent({ view }: { view: string }) {
-  const { inquiries, updateInquiry, user, listings } = useDemo();
+  const { inquiries, updateInquiry, user, listings, sellerAnalytics } = useDemo();
+  const sellerInquiries = inquiries.filter((inquiry) =>
+    listings.some((listing) => listing.id === inquiry.propertyId),
+  );
+  const published = listings.filter((listing) => listing.status === "published").length;
+  const pending = listings.filter((listing) => listing.status === "pending_review").length;
   if (view === "Inquiries")
     return (
       <Panel
         title="Inquiry inbox"
         intro="Review and update messages from interested buyers and renters."
       >
-        {inquiries.length ? (
-          inquiries.map((x) => (
+        {sellerInquiries.length ? (
+          sellerInquiries.map((x) => (
             <Row
               key={x.id}
               title={x.propertyTitle}
@@ -159,28 +164,26 @@ function SellerContent({ view }: { view: string }) {
           <Stat
             icon={Eye}
             label="Total views"
-            value="2,418"
-            change="+12% this month"
+            value={String(sellerAnalytics.views)}
+            change="Recorded across your listings"
           />
           <Stat
             icon={Heart}
             label="Favorites"
-            value="86"
-            change="+8 this week"
+            value={String(sellerAnalytics.favorites)}
+            change="Recorded favorite events"
           />
           <Stat
             icon={MessageCircle}
             label="Inquiries"
-            value={String(inquiries.length + 34)}
-            change="5 need a reply"
+            value={String(sellerAnalytics.inquiries)}
+            change={`${sellerInquiries.filter((x) => x.status === "new").length} need a reply`}
           />
           <Stat
             icon={Home}
             label="Active listings"
-            value={String(
-              listings.filter((x) => x.status === "published").length,
-            )}
-            change={`${listings.filter((x) => x.status === "pending_review").length} pending review`}
+            value={String(published)}
+            change={`${pending} pending review`}
           />
         </div>
         <Panel title="Performance by property" intro="Last 30 days">
@@ -193,7 +196,21 @@ function SellerContent({ view }: { view: string }) {
               "Phone",
               "WhatsApp",
             ]}
-            rows={listings.map((p) => [p.title, "—", "—", "—", "—", "—"])}
+            rows={listings.map((p) => {
+              const stats = sellerAnalytics.byProperty[p.id] || {
+                views: 0,
+                favorites: 0,
+                inquiries: 0,
+              };
+              return [
+                p.title,
+                String(stats.views),
+                String(stats.favorites),
+                String(stats.inquiries),
+                "0",
+                "0",
+              ];
+            })}
           />
         </Panel>
       </>
@@ -242,23 +259,21 @@ function SellerContent({ view }: { view: string }) {
         <Stat
           icon={Eye}
           label="Total views"
-          value="2,418"
-          change="+12% this month"
+          value={String(sellerAnalytics.views)}
+          change="Recorded across your listings"
         />
-        <Stat icon={Heart} label="Favorites" value="86" change="+8 this week" />
+        <Stat icon={Heart} label="Favorites" value={String(sellerAnalytics.favorites)} change="Recorded favorite events" />
         <Stat
           icon={MessageCircle}
           label="Inquiries"
-          value={String(inquiries.length + 34)}
-          change="5 need a reply"
+          value={String(sellerAnalytics.inquiries)}
+          change={`${sellerInquiries.filter((x) => x.status === "new").length} need a reply`}
         />
         <Stat
           icon={Home}
           label="Active listings"
-          value={String(
-            listings.filter((x) => x.status === "published").length,
-          )}
-          change={`${listings.filter((x) => x.status === "pending_review").length} pending review`}
+          value={String(published)}
+          change={`${pending} pending review`}
         />
       </div>
       <Panel
@@ -275,7 +290,7 @@ function SellerContent({ view }: { view: string }) {
             p.title,
             formatPrice(p.price),
             p.status.replaceAll("_", " "),
-            "—",
+            String(sellerAnalytics.byProperty[p.id]?.views || 0),
             "Edit",
           ])}
           linkLast
