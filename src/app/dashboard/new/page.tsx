@@ -30,7 +30,7 @@ export default function NewListing() {
           const d = new FormData(e.currentTarget),
             title = String(d.get("title"));
           try {
-            await addListing({
+            const propertyId = await addListing({
               slug: `${title
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, "-")
@@ -54,7 +54,7 @@ export default function NewListing() {
               has_water_tank: d.get("has_water_tank") === "on",
               has_security: d.get("has_security") === "on",
             });
-            router.push("/dashboard");
+            router.push(`/dashboard/properties/${propertyId}/edit?created=1`);
           } catch (x) {
             setError(x instanceof Error ? x.message : "Unable to save listing");
           } finally {
@@ -141,6 +141,10 @@ export default function NewListing() {
             </label>
           ))}
         </div>
+        <section className="rounded-2xl border border-dashed border-stone-300 bg-white p-5 sm:col-span-2">
+          <p className="font-serif text-xl font-semibold text-[#173c34]">Photos are the next step</p>
+          <p className="mt-1 text-sm text-stone-500">Save this private draft, then upload and arrange up to 20 property photos before submitting it for review.</p>
+        </section>
         {error ? (
           <p
             role="alert"

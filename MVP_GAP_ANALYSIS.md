@@ -42,7 +42,7 @@ Betoch's Supabase-backed build is deployed at `https://betoch-property-marketpla
 | Listing workflow | Persist full property/stay fields, validation and status transitions; add explicit “submit for review” after saving a draft. |
 | Editing/resubmission | Show rejection reasons and support explicit resubmission; owner-authorized database reads and updates are connected. |
 | Delete/archive | Add confirmation UI; archive published listings by default and reserve permanent deletion for drafts/admin use. |
-| Photographs | Connect the existing image APIs to the UI; add client compression/EXIF removal, thumbnails, upload progress, reorder, primary selection, retry and 20-image enforcement. |
+| Photographs | Generate stored thumbnail derivatives, add per-file byte-level progress/retry and validate decoded image content server-side. The owner UI, client resize/compression and metadata removal, previews, ordering, primary selection, deletion and 20-photo enforcement are connected. |
 | Stay availability | Build the host calendar editor for available/blocked/maintenance ranges and minimum/maximum stays. |
 | Fixed pricing/rules | Add seller editors for nightly/weekly/monthly pricing, fees, deposits, guest capacity, beds, furnishing details and stay rules. |
 | Inquiries | Add conversation/detail UI and a real reply/contact workflow; current status management is not a messaging system. |

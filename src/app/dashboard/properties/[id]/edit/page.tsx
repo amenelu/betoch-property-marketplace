@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChevronLeft, Check } from "@/components/icons";
 import { getBrowserClient } from "@/lib/supabase";
+import { PhotoManager, type PropertyImage } from "@/components/photo-manager";
 
 type EditableProperty = Record<string, any>;
 
@@ -88,6 +89,7 @@ export default function EditProperty({ params }: { params: { id: string } }) {
             </div>
           </div>
         </section>
+        <PhotoManager propertyId={params.id} initialImages={(property.property_images || []) as PropertyImage[]} />
         {error ? <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p> : null}
         <div className="flex justify-end gap-3"><Link href="/dashboard" className="grid min-h-11 place-items-center px-5 text-sm">Cancel</Link><button disabled={busy} className="flex min-h-11 items-center gap-2 rounded-full bg-[#d85d3f] px-6 font-bold text-white disabled:opacity-60"><Check size={17} />{busy ? "Saving…" : "Save changes"}</button></div>
       </form>
