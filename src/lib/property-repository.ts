@@ -8,11 +8,16 @@ export async function getPublishedProperties(): Promise<Property[]> {
   const db = getServiceClient();
   if (!db)
     return process.env.NODE_ENV === "development" ? developmentFixtures : [];
-  const { data, error } = await db
+  const [{ data, error }, aggregatedResult] = await Promise.all([db
     .from("properties")
     .select("*,property_images(*),property_pricing(*),property_rules(*)")
     .eq("status", "published")
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false }), db
+      .from("aggregated_properties")
+      .select("*,property_sources(name)")
+      .in("source_status", ["active", "stale"])
+      .is("normalized_property_id", null)
+      .order("last_seen_at", { ascending: false })]);
   if (error)
     throw new Error(`Unable to load published properties: ${error.message}`);
   const ownerIds = Array.from(
@@ -22,9 +27,12 @@ export async function getPublishedProperties(): Promise<Property[]> {
     ? await db.from("profiles").select("*").in("id", ownerIds)
     : { data: [] };
   const profileMap = new Map((profiles || []).map((x: any) => [x.id, x]));
-  return (data || []).map((row: any) =>
+  const direct = (data || []).map((row: any) =>
     mapProperty(row, profileMap.get(row.owner_id), db),
   );
+  // A missing aggregation migration must not take down the direct marketplace.
+  const aggregated = aggregatedResult.error ? [] : (aggregatedResult.data || []).map(mapAggregatedProperty);
+  return [...direct, ...aggregated].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 export async function getPublishedProperty(slug: string) {
   const all = await getPublishedProperties();
@@ -119,6 +127,7 @@ function mapProperty(
     verifiedLocation: row.verified_location,
     verifiedAmenities: row.verified_amenities,
     createdAt: row.created_at,
+    inventoryType: "direct",
     seller: {
       id: row.owner_id,
       name: profile?.name || "Betoch seller",
@@ -138,6 +147,38 @@ function mapProperty(
         : undefined,
       responseTime: profile?.response_time || undefined,
     },
+  };
+}
+
+function mapAggregatedProperty(row: any): Property {
+  return {
+    id: `aggregated:${row.id}`,
+    slug: `aggregated-${row.id}`,
+    title: row.title,
+    description: row.description || "See the original source for full listing information.",
+    propertyType: titleCase(row.property_type),
+    listingType: row.listing_type,
+    price: Number(row.price || 0),
+    currency: "ETB",
+    areaSqm: Number(row.area_sqm || 0),
+    bedrooms: row.bedrooms || 0,
+    bathrooms: row.bathrooms || 0,
+    parkingSpaces: row.parking_spaces || 0,
+    neighborhood: row.neighborhood || row.subcity || "Addis Ababa",
+    subcity: row.subcity || "Addis Ababa",
+    city: row.city || "Addis Ababa",
+    latitude: row.latitude || 9.03,
+    longitude: row.longitude || 38.74,
+    image: fallbackImage,
+    images: [fallbackImage],
+    verificationStatus: "unverified",
+    furnished: row.furnished || false,
+    hasElevator: false, hasGenerator: false, hasWaterTank: false, hasSecurity: false,
+    hasBalcony: false, hasGarden: false,
+    createdAt: row.last_seen_at,
+    inventoryType: "aggregated",
+    source: { name: row.property_sources?.name || "External source", url: row.source_url, lastSeenAt: row.last_seen_at, status: row.source_status },
+    seller: { id: "external-source", name: row.source_agent_name || row.property_sources?.name || "External source", role: "broker", memberSince: row.first_seen_at, activeListings: 0, verified: false },
   };
 }
 const titleCase = (value: string) =>

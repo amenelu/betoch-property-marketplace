@@ -100,3 +100,22 @@ Betoch's Supabase-backed build is deployed at `https://betoch-property-marketpla
 4. Complete verification-document submission/review and enforcement audit logging.
 5. Add security hardening and database/RLS/integration tests.
 6. Add legal/operations/monitoring and run full production buyer/seller/admin browser verification.
+
+## Property aggregation extension — remaining work
+
+The Phase A schema, normalized adapter contract, admin source registry, unified direct/aggregated read model, inventory filter, attribution, freshness display, crawl health storage, location aliases and price-history storage are implemented in code. The migration must be applied to production before sources can be registered. No external source or crawler has been invented or enabled.
+
+| Priority | Remaining work |
+|---|---|
+| Phase A operations | Legally approve the first API/feed/partner source; implement its independent adapter and a rate-limited importer; schedule it only after terms, robots/licensing and opt-out review; add admin crawl-run/error metrics. |
+| Phase A search | Move unified filtering/ranking to a paginated server query or search index; add price, bathrooms, area, amenities and freshness filters; track searches, zero results and popular locations. |
+| Phase A media | Decide source-by-source whether remote images may be displayed, proxied or stored. Current aggregated listings deliberately use a neutral fallback image. |
+| Phase B deduplication | Implement explainable confidence scoring, candidate review, property groups and conservative merge controls. The schema only stores an initial confidence field. |
+| Phase B claiming | Add claim requests, claimant documents, admin approval/rejection, audit logs and conversion/linking to an owner-managed direct listing. Keep claim status separate from legal ownership verification. |
+| Phase B alerts/history | Add saved-search CRUD and email delivery; record price changes during imports and expose history only where legally permitted. |
+| Phase C promotion | Add admin-controlled promotions, sponsored labels and date/status validation. Do not add payments yet. |
+| Phase C business accounts | Add configurable subscription tiers/entitlements, agencies and team membership without hard-coded prices. |
+| Phase C leads | Persist inquiry, phone, WhatsApp, viewing and booking-request leads; add seller aggregates and prevent page views from being counted as leads. |
+| Phase C developers/ads | Add developer/project profiles, clearly labeled campaigns, placement controls and campaign analytics. |
+| Phase D future models | Service-provider records, property intelligence reporting and future booking/referral commission architecture remain intentionally unimplemented. No payments, mortgages or official-value claims. |
+| Compliance/operations | Add takedown and source opt-out workflows, retention rules, per-source audit evidence, source reliability scoring, crawl alerts and review by Ethiopian legal counsel before production aggregation. |

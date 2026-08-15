@@ -42,6 +42,7 @@ export default async function PropertyPage({
 }) {
   const p = await getPublishedProperty(params.slug);
   if (!p) notFound();
+  const aggregated = p.inventoryType === "aggregated";
   const stay = ["short_term_stay", "medium_term_rent"].includes(p.listingType);
   const amenities = [
     [p.furnished, "Furnished"],
@@ -117,7 +118,7 @@ export default async function PropertyPage({
               {p.neighborhood}, {p.city} · approximate location
             </p>
             <p className="mt-7 text-3xl font-bold text-[#183c34]">
-              {formatPrice(p.price)}
+              {p.price ? formatPrice(p.price) : "Price unavailable"}
               {p.listingType !== "sale" ? (
                 <span className="text-base font-normal text-stone-500">
                   {" "}
@@ -193,6 +194,14 @@ export default async function PropertyPage({
                 </div>
               </Section>
             ) : null}
+            {aggregated && p.source ? <Section title="Source and freshness">
+              <div className="rounded-2xl border border-[#d8d1c3] bg-[#f6f4ee] p-6">
+                <p className="font-bold text-[#183c34]">Originally listed on {p.source.name}</p>
+                <p className="mt-2 text-sm text-stone-600">Last checked {new Date(p.source.lastSeenAt).toLocaleDateString("en-ET", { dateStyle: "medium" })}{p.source.status === "stale" ? " · Possibly outdated" : ""}</p>
+                <p className="mt-3 text-xs leading-5 text-stone-500">This is an aggregated listing, not a property submitted to Betoch. Details remain attributable to the original publisher.</p>
+                <a href={p.source.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-[#183c34] px-5 text-sm font-bold text-white">View original listing</a>
+              </div>
+            </Section> : null}
             <Section
               title={
                 p.listingType === "sale" ? "Asking price per m²" : "Pricing"
@@ -209,11 +218,11 @@ export default async function PropertyPage({
                       <b>{formatPrice(x.amount)}</b>
                     </p>
                   ))
-                ) : (
+                ) : p.areaSqm > 0 && p.price > 0 ? (
                   <p className="text-2xl font-bold text-[#183c34]">
                     {formatPrice(Math.round(p.price / p.areaSqm))} / m²
                   </p>
-                )}
+                ) : <p className="text-sm text-stone-600">The source did not provide enough information for a price-per-square-meter calculation.</p>}
                 <p className="mt-3 text-xs text-stone-500">
                   Fixed host pricing. Betoch does not process payment.
                 </p>
@@ -221,7 +230,7 @@ export default async function PropertyPage({
             </Section>
           </article>
           <aside className="space-y-4">
-            <div className="rounded-2xl border bg-white p-6">
+            {!aggregated ? <div className="rounded-2xl border bg-white p-6">
               <Link
                 href={`/sellers/${p.seller.id}`}
                 className="flex items-center gap-3 border-b pb-5"
@@ -263,8 +272,8 @@ export default async function PropertyPage({
                 <Badge ok={p.verifiedPhotos}>Photos verified</Badge>
                 <Badge ok={p.verifiedAmenities}>Amenities reviewed</Badge>
               </div>
-            </div>
-            {stay ? (
+            </div> : p.source ? <div className="rounded-2xl border bg-white p-6"><p className="eyebrow">Aggregated listing</p><h2 className="mt-2 font-serif text-2xl text-[#183c34]">Published by {p.source.name}</h2><p className="mt-3 text-sm leading-6 text-stone-500">Contact, availability and ownership information must be confirmed on the original listing.</p><a href={p.source.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#d85d3f] px-5 text-sm font-bold text-white">Open original source</a></div> : null}
+            {!aggregated && stay ? (
               <StayActions
                 propertyId={p.id}
                 propertyTitle={p.title}
@@ -275,12 +284,12 @@ export default async function PropertyPage({
                 maxGuests={p.maxGuests}
               />
             ) : null}
-            <PropertyActions
+            {!aggregated ? <PropertyActions
               propertyId={p.id}
               propertyTitle={p.title}
               phone={p.seller.phone}
               whatsapp={p.seller.whatsapp}
-            />
+            /> : null}
           </aside>
         </div>
       </main>

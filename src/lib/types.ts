@@ -14,5 +14,7 @@ export interface Property {
   fullyFurnished?:boolean; semiFurnished?:boolean; kitchenEquipped?:boolean; washingMachine?:boolean; television?:boolean; workspace?:boolean; airConditioning?:boolean; heating?:boolean;
   maxGuests?:number; beds?:number; bedTypes?:string[]; prices?:PropertyPrice[]; rules?:PropertyRules; rating?:number; reviewCount?:number;
   verifiedPhotos?:boolean; verifiedLocation?:boolean; verifiedAmenities?:boolean;
+  inventoryType?: "direct" | "aggregated";
+  source?: { name: string; url: string; lastSeenAt: string; status: "active" | "stale" | "unavailable" };
   seller: { id: string; name: string; role: "owner" | "broker"; agency?: string; memberSince: string; activeListings: number; phone?: string; whatsapp?: string; verified: boolean; hostRating?:number; reviewCount?:number; responseRate?:number; responseTime?:string };
 }

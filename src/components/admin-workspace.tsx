@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { getBrowserClient } from "@/lib/supabase";
-type View = "Overview" | "Properties" | "Users" | "Verification" | "Reports";
+type View = "Overview" | "Properties" | "Users" | "Verification" | "Reports" | "Sources";
 type Item = Record<string, any>;
 export function AdminWorkspace() {
   const [view, setView] = useState<View>("Overview"),
@@ -38,7 +38,7 @@ export function AdminWorkspace() {
             ? "/api/admin/users"
             : view === "Verification"
               ? "/api/admin/verifications"
-              : "/api/admin/reports";
+              : view === "Reports" ? "/api/admin/reports" : "/api/admin/sources";
       setItems((await request(path)).data || []);
     } catch (x) {
       setError(x instanceof Error ? x.message : "Unable to load admin data");
@@ -82,6 +82,7 @@ export function AdminWorkspace() {
               "Users",
               "Verification",
               "Reports",
+              "Sources",
             ] as View[]
           ).map((x) => (
             <button
@@ -114,6 +115,7 @@ export function AdminWorkspace() {
               <p className="text-sm text-stone-500">
                 Authenticated production records
               </p>
+              {view === "Sources" ? <SourceForm request={request} reload={load} /> : null}
             </div>
             <div className="divide-y">
               {items.length ? (
@@ -196,10 +198,12 @@ function AdminRow({
         ? item.name
         : view === "Verification"
           ? item.properties?.title || item.verification_type
-          : item.properties?.title || "Reported property";
+          : view === "Sources" ? item.name : item.properties?.title || "Reported property";
   const subtitle =
     view === "Users"
       ? `${item.role} · ${item.agency_name || "Independent"}`
+      : view === "Sources"
+        ? `${item.source_type} · ${item.base_url}`
       : view === "Reports"
         ? `${item.reason?.replaceAll("_", " ")} · ${item.profiles?.name || "Reporter"}`
         : view === "Verification"
@@ -279,6 +283,14 @@ function AdminRow({
               Reject
             </button>
           </>
+        ) : view === "Sources" ? (
+          <select
+            value={item.status}
+            onChange={(e) => patch(`/api/admin/sources/${item.id}`, { status: e.target.value, confirm_legal_review: e.target.value === "active" ? window.confirm("Confirm that terms, robots.txt, licensing and crawling authorization were reviewed for this source.") : false })}
+            className="rounded-lg border px-3 py-2 text-xs"
+          >
+            <option value="paused">paused</option><option value="active">active</option><option value="disabled">disabled</option>
+          </select>
         ) : (
           <select
             value={item.status}
@@ -298,4 +310,22 @@ function AdminRow({
       </div>
     </article>
   );
+}
+
+function SourceForm({ request, reload }: { request: (path: string, init?: RequestInit) => Promise<any>; reload: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    await request("/api/admin/sources", { method: "POST", body: JSON.stringify(Object.fromEntries(form)) });
+    event.currentTarget.reset(); setOpen(false); await reload();
+  }
+  if (!open) return <button type="button" onClick={() => setOpen(true)} className="mt-4 rounded-full bg-[#173c34] px-4 py-2 text-xs font-bold text-white">Add approved source</button>;
+  return <form onSubmit={submit} className="mt-5 grid gap-3 rounded-xl bg-[#f6f4ee] p-4 sm:grid-cols-2">
+    <input name="name" required placeholder="Source name" className="h-11 rounded-lg border px-3" />
+    <input name="base_url" required type="url" placeholder="https://source.example" className="h-11 rounded-lg border px-3" />
+    <select name="source_type" className="h-11 rounded-lg border px-3"><option value="api">Official API</option><option value="partner">Partner</option><option value="feed">Public feed</option><option value="website">Authorized website</option></select>
+    <input name="authorization_notes" required placeholder="Authorization / terms review notes" className="h-11 rounded-lg border px-3" />
+    <div className="flex gap-2 sm:col-span-2"><button className="rounded-full bg-[#173c34] px-4 py-2 text-xs font-bold text-white">Save paused source</button><button type="button" onClick={() => setOpen(false)} className="px-4 text-xs">Cancel</button></div>
+  </form>;
 }
