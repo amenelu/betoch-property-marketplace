@@ -6,23 +6,19 @@ This document intentionally lists only incomplete work. Completed pages, APIs, m
 
 ## Release status
 
-Betoch is deployed, but the currently published Vercel build predates the new Supabase-backed authentication client. The new authentication implementation builds successfully locally but must not be promoted until `202608150003_auth_profiles.sql` is applied and the critical real-user flows pass against Supabase.
+Betoch's Supabase-backed build is deployed at `https://betoch-property-marketplace.vercel.app`. The Auth-profile trigger, database connection, SSR session middleware, owner login, protected dashboard, property creation API and non-admin denial from admin APIs have been verified against production Supabase. The production catalogue is intentionally empty until real sellers submit listings and an administrator publishes them.
 
 ## Critical launch blockers
 
-1. Apply `supabase/migrations/202608150003_auth_profiles.sql` to production Supabase. This installs the secure Auth-user-to-marketplace-profile trigger and controlled role onboarding.
-2. Test a real buyer, owner and broker signup, email confirmation, login, logout, session restoration and password reset against production Supabase.
-3. Create the first administrator through a controlled SQL/server process; public registration must never accept the admin role.
-4. Add server-side route guards for `/admin` and `/dashboard`. Current client gates improve the interface but are not a substitute for server authorization; RLS remains the final data boundary.
-5. Replace public fixture-backed property browse/detail/seller pages with database queries. Current sample cards use fixture IDs, so database favorites, inquiries, reports and bookings cannot safely operate on those sample listings.
-6. Connect the admin and seller dashboard tables/statistics to database queries. Several dashboard controls still update component state rather than persisted records.
-7. Redeploy the Supabase-backed build to Vercel and run end-to-end production verification.
+1. Register and confirm the project owner's account, then run `npm run promote-admin -- owner@example.com` to create the first administrator. Public registration correctly excludes the admin role.
+2. Complete production email-confirmation and password-reset delivery tests with a real inbox; disposable confirmed-owner login/session/property creation already pass.
+3. Publish the first real listing so catalogue, favorite, inquiry, report and booking journeys can be verified with production UUID records.
+4. Finish seller profile, listing editing/submission, images and persisted analytics; the main seller table is database-backed but profile/analytics sections still contain placeholder values.
 
 ## Public marketplace gaps
 
 | Area | Remaining work |
 |---|---|
-| Database-backed catalogue | Load published properties, images, pricing, rules, host profiles, reviews and verification checks from Supabase; retain fixtures only as explicit development seeds. |
 | Search | Move filtering to query parameters/server API; add min/max price, bathrooms, area, furnished, parking, city/subcity/neighborhood, dates, guest capacity and stay amenities. Add pagination. |
 | Availability search | Exclude blocked, reserved and maintenance date ranges; enforce minimum/maximum stay during search and request creation. |
 | Real map | Select a provider, add geocoding/address search, draggable markers, bounds search, selected-card synchronization and exact/approximate privacy behavior. |
@@ -35,10 +31,7 @@ Betoch is deployed, but the currently published Vercel build predates the new Su
 
 | Area | Remaining work |
 |---|---|
-| Production migration | Apply and verify `202608150003_auth_profiles.sql`. |
-| SSR sessions | Add a Supabase SSR cookie client and middleware/session refresh so protected routes are decided before client hydration. |
 | Account settings | Add a buyer account page and database-backed owner/broker profile editor for name, phone, WhatsApp, agency, bio and contact visibility. |
-| Suspension enforcement | Check `suspended_at` during session/route authorization and sign suspended users out of protected workflows. |
 | Email delivery | Verify confirmation and password-reset templates, redirect URLs, sender identity and deliverability in production. |
 | Guest verification | Expose email/phone verification state; phone verification remains optional until a phone provider is selected. |
 
@@ -59,7 +52,6 @@ Betoch is deployed, but the currently published Vercel build predates the new Su
 
 | Area | Remaining work |
 |---|---|
-| Admin UI persistence | Connect moderation, users, verification and reports screens to their authenticated admin APIs instead of component-local state. |
 | Verification submission | Add owner/broker private-document upload, submission history and status display. |
 | Secure document review | Complete admin document viewing with authorization, safe content disposition, audit history and approve/reject notes. |
 | Verification extensions | Persist and manage verified host, location, photos and amenities checks independently. |
@@ -102,10 +94,9 @@ Betoch is deployed, but the currently published Vercel build predates the new Su
 
 ## Recommended completion order
 
-1. Apply the auth-profile migration and verify real authentication.
-2. Make public catalogue/detail pages database-backed and seed valid UUID development data.
-3. Add SSR route protection and production account/profile management.
-4. Finish persisted seller listing/image/location/stay management.
-5. Connect admin moderation, verification, reports and suspensions end to end.
-6. Add security hardening and database/RLS/integration tests.
-7. Add legal/operations/monitoring, redeploy and run production browser verification.
+1. Create the first administrator and publish a real owner-submitted listing.
+2. Finish production account/profile management and listing edit/submit/archive flows.
+3. Finish image, location and stay availability/pricing/rules management.
+4. Complete verification-document submission/review and enforcement audit logging.
+5. Add security hardening and database/RLS/integration tests.
+6. Add legal/operations/monitoring and run full production buyer/seller/admin browser verification.
