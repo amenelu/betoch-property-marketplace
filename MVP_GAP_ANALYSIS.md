@@ -1,139 +1,111 @@
-# Betoch MVP gap analysis
+# Betoch MVP — remaining gap analysis
 
-Status legend: **Implemented** means a usable route or backend capability exists; **Partial** means a visual/demo foundation exists but is not production-connected; **Missing** means no implementation exists yet.
+Updated: 2026-08-15
 
-## Executive summary
+This document intentionally lists only incomplete work. Completed pages, APIs, migrations, responsive UI, request-based stay flows, manual moderation foundations, deployment configuration, and local build/test work have been removed.
 
-The repository now provides a complete navigable demo MVP for buyer/renter, owner/broker, and administrator roles, plus a production-shaped PostgreSQL/RLS schema and authenticated APIs. Every visible primary navigation item and action has a usable destination or state transition. Browser-local persistence is used when Supabase is not configured. A production launch still requires a configured Supabase project, real user sessions, processed media, a map provider, rate limiting, and expanded integration/E2E testing.
+## Release status
 
-## Completion update
+Betoch is deployed, but the currently published Vercel build predates the new Supabase-backed authentication client. The new authentication implementation builds successfully locally but must not be promoted until `202608150003_auth_profiles.sql` is applied and the critical real-user flows pass against Supabase.
 
-Completed since the initial gap review:
+## Critical launch blockers
 
-- Role-based demo registration/login, password recovery and access gates
-- Persistent favorites page and seller profile routes
-- Persistent inquiry and reporting dialogs connected to seller/admin queues
-- Functional seller listings, editing, inbox, analytics and profile sections
-- Functional admin property moderation, users, verification and reports sections
-- Ten-step stateful listing creation with preview and pending-review submission
-- Responsive property gallery repair and seller profile linking
-- Authenticated inquiry, report, moderation, user, verification, private-document, image and analytics APIs
-- Browser-verified buyer → favorite, login → admin, and inquiry → seller-inbox flows
+1. Apply `supabase/migrations/202608150003_auth_profiles.sql` to production Supabase. This installs the secure Auth-user-to-marketplace-profile trigger and controlled role onboarding.
+2. Test a real buyer, owner and broker signup, email confirmation, login, logout, session restoration and password reset against production Supabase.
+3. Create the first administrator through a controlled SQL/server process; public registration must never accept the admin role.
+4. Add server-side route guards for `/admin` and `/dashboard`. Current client gates improve the interface but are not a substitute for server authorization; RLS remains the final data boundary.
+5. Replace public fixture-backed property browse/detail/seller pages with database queries. Current sample cards use fixture IDs, so database favorites, inquiries, reports and bookings cannot safely operate on those sample listings.
+6. Connect the admin and seller dashboard tables/statistics to database queries. Several dashboard controls still update component state rather than persisted records.
+7. Redeploy the Supabase-backed build to Vercel and run end-to-end production verification.
 
-Items labeled “Missing” below should now be read as production integration gaps where a demo workflow exists. The final launch blockers remain summarized in “Deployment readiness checklist.”
+## Public marketplace gaps
 
-## Public marketplace
-
-| Requirement | Status | Remaining work |
-|---|---|---|
-| Homepage, featured/recent listings, locations | Partial | Replace static fixtures with database queries; manage featured status and locations in admin. |
-| Search and filtering | Partial | Current client demo supports keyword, listing type, property type, bedrooms and verified. Add price, bathrooms, area, furnished, parking, city/subcity/neighborhood, URL persistence and server pagination. |
-| Sorting | Partial | Newest, price and area work. Add price/m² and recently updated. |
-| List view | Implemented as demo | Connect favorites and results to authenticated/database state. |
-| Map discovery | Partial | Current map is a visual approximation. Integrate environment-configured provider, marker clustering, bounds search and selected-card synchronization. |
-| Property details | Partial | Gallery, amenities, price/m², seller and verification display exist. Add real image gallery controls, database loading, view analytics and unavailable/private states. |
-| Seller profile page | Missing | Add `/sellers/[id]` with role, agency, bio, verification, active listings and public contact preferences. |
-| Favorites page | Missing | Add `/favorites`; current card state is local only. |
-| Report listing flow | Missing | Add report dialog/page with specified reasons, validation and confirmation. |
-| SEO | Partial | Metadata, sitemap and robots exist for demo data. Generate from database; ensure non-published properties return noindex/404. |
-
-## Authentication and accounts
-
-| Requirement | Status | Remaining work |
-|---|---|---|
-| Email/password sign-up and sign-in | Partial | Login is visual only. Connect Supabase Auth, add registration, email confirmation, errors and loading states. |
-| Session handling | Missing | Add Supabase SSR cookie client and session refresh middleware/proxy. |
-| Password reset | Missing | Add request/reset pages and safe redirect handling. |
-| Role onboarding | Missing | Choose buyer/owner/broker; prevent client-side role escalation. |
-| Profile management | Missing | Add `/account/profile`, contact visibility controls and agency fields. |
-| Route protection | Missing in Next.js | RLS exists, but `/admin` and `/dashboard` are publicly reachable demo pages. Add server-side guards and suspension checks. |
-
-## Seller and broker experience
-
-| Requirement | Status | Remaining work |
-|---|---|---|
-| Seller dashboard | Partial | Metrics/table use fixtures; connect per-owner queries and real status actions. |
-| Broker profile/agency | Missing | Add creation/editing, verification state and multi-listing management. |
-| Listing creation | Partial | Ten-step UI exists but does not persist data, validate between steps, autosave or detect duplicates. |
-| Listing editing/resubmission | Missing | Add `/dashboard/properties/[id]/edit`, ownership checks, rejection reason and resubmit action. |
-| Listing deletion/archive | API foundation | Add confirmation UI and prefer archive for published records. |
-| Image management | Missing | Upload, resize/compress, metadata stripping, thumbnails, reordering, primary image and delete are absent. |
-| Location picker | Missing | Add geocoding/address search, draggable marker and exact/approximate choice. |
-| Inquiry inbox | Missing | Dashboard tab is visual only. Add list/detail/status/reply workflow. |
-| Property analytics | Partial | Dashboard metrics are fixtures. Aggregate views, favorites, inquiries, phone/WhatsApp clicks by listing/date. |
-
-## Verification and moderation
-
-| Requirement | Status | Remaining work |
-|---|---|---|
-| Verification schema and private bucket | Implemented | Migration models granular manual checks and admin-only document reads. |
-| Seller verification submission | Missing | Private upload form, submission history and status UI. |
-| Admin verification queue | Partial | Visual queue only; add list/detail, secure document streaming/signed URLs, approve/reject and notes. |
-| Listing moderation | Partial | Schema/statuses and visual queue exist; add review detail, approve/reject reason, publication and seller notification. |
-| Reports administration | Partial | Schema and visual navigation exist; add report list/detail, resolve/dismiss and enforcement actions. |
-| User administration | Partial | Visual navigation only; add searchable user list, role/status detail and suspend/reactivate actions. |
-| Duplicate detection | Missing | Implement advisory score using owner, coordinates, price, type, area and title similarity; flag only. |
-| Admin statistics | Partial | Cards are fixtures; connect aggregate queries with date ranges. |
-
-## APIs and backend
-
-| API | Status |
+| Area | Remaining work |
 |---|---|
-| `GET/POST /api/properties` | Partial; validation/auth foundation exists |
-| `GET/PATCH/DELETE /api/properties/:id` | Partial; add response allowlists, full validation and moderation constraints |
-| Property image POST/DELETE | Missing |
-| Favorites GET/POST/DELETE | Implemented foundation; UI not connected |
-| Inquiries POST/GET/PATCH | Missing |
-| Reports POST and admin GET/PATCH | Missing |
-| Admin verifications GET/PATCH | Missing |
-| Private verification document access | Missing route; storage RLS exists |
-| Rate limiting | Missing for auth, inquiries, reports, uploads and analytics |
-| Input sanitization/structured schemas | Partial; replace hand validation with shared typed schemas |
-| Error/logging conventions | Missing |
+| Database-backed catalogue | Load published properties, images, pricing, rules, host profiles, reviews and verification checks from Supabase; retain fixtures only as explicit development seeds. |
+| Search | Move filtering to query parameters/server API; add min/max price, bathrooms, area, furnished, parking, city/subcity/neighborhood, dates, guest capacity and stay amenities. Add pagination. |
+| Availability search | Exclude blocked, reserved and maintenance date ranges; enforce minimum/maximum stay during search and request creation. |
+| Real map | Select a provider, add geocoding/address search, draggable markers, bounds search, selected-card synchronization and exact/approximate privacy behavior. |
+| Property gallery | Add selectable gallery/lightbox, database images, loading/error states and unavailable/private listing handling. |
+| Reviews | Persist review submission through an API, show property/host reviews, and recalculate host rating/review count from completed-booking reviews. |
+| Wishlists | Favorites exist, but named collections such as “Bole Apartments” or “Investment Properties” do not. |
+| SEO | Generate sitemap and property metadata from published database records and return noindex/404 for non-public listings. |
 
-## Data, tests and operations
+## Authentication and account gaps
 
-- **Seed data:** Missing the specified ~30 auth users and ~50 relational properties. Current seed only inserts locations; UI fixtures are not database seed records.
-- **Migrations:** Initial migration exists. It needs integration testing against a clean Supabase instance before production.
-- **Tests:** Only 18 domain unit tests exist. Missing authentication, route-handler integration, RLS/database, image upload, search/filter, favorites, inquiries, reports, verification, admin actions and browser end-to-end tests.
-- **Image security:** Bucket MIME/size policies exist; server-side content decoding, compression, filename generation and 20-image enforcement are missing.
-- **Analytics:** Event table exists; event ingestion, deduplication, privacy controls and seller aggregation are missing.
-- **Observability:** Missing structured logs, error reporting, uptime monitoring and alerting.
-- **Backups/recovery:** Configure Supabase production backups and document restore procedure.
-- **Legal/product pages:** Missing Terms, Privacy, Trust & Safety, verification explanation and contact/support pages.
-- **Localization:** English only; Amharic/localization was not explicitly required but should be planned after MVP validation.
+| Area | Remaining work |
+|---|---|
+| Production migration | Apply and verify `202608150003_auth_profiles.sql`. |
+| SSR sessions | Add a Supabase SSR cookie client and middleware/session refresh so protected routes are decided before client hydration. |
+| Account settings | Add a buyer account page and database-backed owner/broker profile editor for name, phone, WhatsApp, agency, bio and contact visibility. |
+| Suspension enforcement | Check `suspended_at` during session/route authorization and sign suspended users out of protected workflows. |
+| Email delivery | Verify confirmation and password-reset templates, redirect URLs, sender identity and deliverability in production. |
+| Guest verification | Expose email/phone verification state; phone verification remains optional until a phone provider is selected. |
 
-## Deployment readiness checklist
+## Seller and host gaps
 
-Completed in repository:
+| Area | Remaining work |
+|---|---|
+| Listing workflow | Persist full property/stay fields, validation and status transitions; add explicit “submit for review” after saving a draft. |
+| Editing/resubmission | Connect the edit page to owner-authorized database reads/updates, show rejection reasons and support resubmission. |
+| Delete/archive | Add confirmation UI; archive published listings by default and reserve permanent deletion for drafts/admin use. |
+| Photographs | Connect the existing image APIs to the UI; add client compression/EXIF removal, thumbnails, upload progress, reorder, primary selection, retry and 20-image enforcement. |
+| Stay availability | Build the host calendar editor for available/blocked/maintenance ranges and minimum/maximum stays. |
+| Fixed pricing/rules | Add seller editors for nightly/weekly/monthly pricing, fees, deposits, guest capacity, beds, furnishing details and stay rules. |
+| Inquiries | Add conversation/detail UI and a real reply/contact workflow; current status management is not a messaging system. |
+| Analytics | Replace fixture counts with database aggregates for views, favorites, inquiries, requests, reviews, calls, WhatsApp and response rate. |
 
-- Production build and unit-test scripts
-- `.env.example` without secrets
-- Health endpoint at `/api/health`
-- Security response headers
-- `robots.txt` and `sitemap.xml`
-- Vercel framework/region configuration
-- GitHub Actions quality gate for test and build
-- Supabase migration and private-document RLS design
+## Administration and trust gaps
 
-Required before a real production launch:
+| Area | Remaining work |
+|---|---|
+| Admin UI persistence | Connect moderation, users, verification and reports screens to their authenticated admin APIs instead of component-local state. |
+| Verification submission | Add owner/broker private-document upload, submission history and status display. |
+| Secure document review | Complete admin document viewing with authorization, safe content disposition, audit history and approve/reject notes. |
+| Verification extensions | Persist and manage verified host, location, photos and amenities checks independently. |
+| Enforcement | Define what resolving a report does: warning, unpublish listing, suspend user or dismiss report; record the admin actor and reason. |
+| Audit log | Record sensitive admin changes, verification decisions, suspensions and publication transitions. |
+| Admin analytics | Replace fixture statistics with aggregate database queries and date filters. |
 
-1. Finish authentication/session guards and remove public access to demo admin/seller routes.
-2. Provision separate Supabase production project and apply/test migrations.
-3. Configure all production environment variables and allowed auth redirects.
-4. Replace fixture-backed pages with database queries or clearly mark a limited preview deployment.
-5. Create the first admin through a controlled server/SQL process.
-6. Complete private document delivery and image-processing pipeline.
-7. Add rate limiting, integration/RLS tests and end-to-end critical-path tests.
-8. Add legal pages, support contact, monitoring and backup/restore checks.
-9. Run a browser-based desktop/mobile/accessibility audit; current local screenshot tooling was unavailable.
+## Backend and security gaps
 
-## Recommended delivery order
+- Add the missing property-review API and database-backed host-rating calculation.
+- Tighten booking status RLS so guests can only cancel and hosts can only approve/reject/complete valid transitions at the database level, not only in the route handler.
+- Add rate limiting for authentication, inquiries, reports, booking requests, uploads and analytics.
+- Replace hand-written validation with shared typed schemas and response allowlists.
+- Add CSRF/origin protections where cookie-based SSR authentication is introduced.
+- Add structured server logs, request correlation IDs and safe error responses.
+- Validate actual uploaded file content, not only MIME metadata; generate server-controlled object names and remove abandoned uploads.
+- Review all service-role usage and confirm it is limited to server-only administrative operations.
 
-1. Authentication, SSR sessions and protected routes.
-2. Database-backed property browse/detail and seller CRUD.
-3. Image pipeline and location provider.
-4. Favorites, inquiries and reports end to end.
-5. Moderation and verification admin workflows.
-6. Analytics, complete seed data and integration/E2E tests.
-7. Accessibility/browser QA, performance pass and production deployment.
+## Tests still required
+
+- Supabase Auth signup/login/logout/confirmation/reset integration tests.
+- RLS tests proving users cannot access admin data, private verification documents, another owner’s property, another user’s favorites or unauthorized booking transitions.
+- Database-backed property creation, editing, submission, moderation, archive and publication tests.
+- Search/filter/date-availability integration tests.
+- Image upload, reordering, primary-image and 20-image-limit tests.
+- Favorites, inquiries, reports, bookings and completed-stay review tests using real UUID records.
+- Admin user suspension, verification and report-enforcement tests.
+- Browser end-to-end tests for buyer, seller/host and admin critical paths on desktop and mobile.
+- Accessibility checks for keyboard navigation, focus management, dialogs, form errors and contrast.
+
+## Operations and launch gaps
+
+- Seed production-safe reference locations; keep demo users/listings out of production or label them clearly.
+- Configure Supabase backups and document/perform a restore drill.
+- Add error monitoring, uptime monitoring and alert ownership.
+- Add Terms, Privacy, Trust & Safety, verification explanation and support/contact pages.
+- Configure a custom domain and transactional email sender.
+- Resolve the local Git/GitHub SSL certificate issue so recent commits reach the connected repository and future Git pushes trigger the same code deployed through the CLI.
+- Define retention/deletion rules for accounts, inquiries, reports and sensitive verification documents.
+
+## Recommended completion order
+
+1. Apply the auth-profile migration and verify real authentication.
+2. Make public catalogue/detail pages database-backed and seed valid UUID development data.
+3. Add SSR route protection and production account/profile management.
+4. Finish persisted seller listing/image/location/stay management.
+5. Connect admin moderation, verification, reports and suspensions end to end.
+6. Add security hardening and database/RLS/integration tests.
+7. Add legal/operations/monitoring, redeploy and run production browser verification.
