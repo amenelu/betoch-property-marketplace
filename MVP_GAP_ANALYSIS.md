@@ -1,6 +1,6 @@
 # Betoch MVP — remaining gap analysis
 
-Updated: 2026-08-15
+Updated: 2026-08-16
 
 This document intentionally lists only incomplete work. Completed pages, APIs, migrations, responsive UI, request-based stay flows, manual moderation foundations, deployment configuration, and local build/test work have been removed.
 
@@ -119,3 +119,29 @@ The Phase A schema and production migration, normalized adapter contract, admin 
 | Phase C developers/ads | Add developer/project profiles, clearly labeled campaigns, placement controls and campaign analytics. |
 | Phase D future models | Service-provider records, property intelligence reporting and future booking/referral commission architecture remain intentionally unimplemented. No payments, mortgages or official-value claims. |
 | Compliance/operations | Add takedown and source opt-out workflows, retention rules, per-source audit evidence, source reliability scoring, crawl alerts and review by Ethiopian legal counsel before production aggregation. |
+
+## Federated external search — remaining work
+
+The AutoTempest-style MVP behavior is implemented: active filters generate clearly labeled outbound searches for five external sources, unsupported filters are disclosed, no destination content is fetched, non-affiliation is explicit and outbound clicks are recorded through analytics metadata. See `AUTOTEMPEST_SEARCH_MVP.md`.
+
+| Area | Remaining work |
+|---|---|
+| Shareable search | Synchronize filters with URL query parameters and restore them on reload/back navigation. |
+| Expanded transfer | Add Betoch price, bathroom, area, furnished and amenity filters, then transfer only fields each destination supports. |
+| Source operations | Move external URL templates, ordering and enabled state into an admin-controlled registry; add safe link-health monitoring without fetching result inventories. |
+| Partnership funnel | Report outbound searches, clicks, click-through rates and high-demand/low-inventory combinations for source partnership outreach. |
+| Saved demand | Persist saved searches and email alerts for Betoch and authorized inventory. Never represent external-site coverage as alert coverage. |
+| Compliance | Periodically review source terms and remove links on request; never upgrade a source to aggregation without documented authorization. |
+
+## Monetization — remaining work
+
+The commercial priorities and sequencing are documented in `MONETIZATION_STRATEGY.md`. Basic search remains free and payments remain outside the MVP.
+
+| Priority | Remaining work |
+|---|---|
+| Featured inventory | Build admin-controlled promotions with dates, placement validation and a mandatory `Sponsored` label. |
+| Professional plans | Add configurable plans and entitlements for brokers/agencies without hard-coded prices or payment enforcement. |
+| Developer products | Add project profiles, unit types, campaigns and lead analytics. |
+| Qualified leads | Define billable lead qualification, consent, deduplication and disputes before enabling charges. Page views must never be billable leads. |
+| Listing services | Define operational pricing and fulfillment for photography, measurement, listing preparation and verification visits. |
+| Referrals/intelligence | Add vetted service-provider referrals later; offer property intelligence only after sufficient licensed historical data exists. |

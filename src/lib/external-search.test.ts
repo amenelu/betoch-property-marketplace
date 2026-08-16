@@ -1,0 +1,20 @@
+import { describe, expect, it } from "vitest";
+import { buildExternalSearchLinks } from "./external-search";
+
+describe("external comparison search", () => {
+  it("encodes active filters into five safe HTTPS links", () => {
+    const links = buildExternalSearchLinks({ location: "Bole Medhanealem", listingType: "sale", propertyType: "Apartment", minBeds: 2 });
+    expect(links).toHaveLength(5);
+    for (const link of links) {
+      expect(new URL(link.url).protocol).toBe("https:");
+      expect(decodeURIComponent(link.url)).toContain("Bole");
+      expect(link.relationship).toBe("External search");
+    }
+  });
+
+  it("uses a native sale path where the source supports it", () => {
+    const [epc] = buildExternalSearchLinks({ listingType: "sale" });
+    expect(epc.url).toContain("/for-sale?");
+    expect(epc.transferred).toContain("listing type");
+  });
+});

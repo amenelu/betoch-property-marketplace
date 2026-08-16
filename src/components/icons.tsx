@@ -1,1 +1,1 @@
-export { Search, MapPin, BedDouble, Bath, Maximize, Heart, ShieldCheck, ArrowRight, Menu, X, SlidersHorizontal, Building2, Phone, MessageCircle, Flag, Share2, ChevronLeft, Check, Clock3, Eye, Users, Home, LayoutDashboard, Plus, Upload, Camera } from "lucide-react";
+export { Search, MapPin, BedDouble, Bath, Maximize, Heart, ShieldCheck, ArrowRight, Menu, X, SlidersHorizontal, Building2, Phone, MessageCircle, Flag, Share2, ChevronLeft, Check, Clock3, Eye, Users, Home, LayoutDashboard, Plus, Upload, Camera, ExternalLink } from "lucide-react";
