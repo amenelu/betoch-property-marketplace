@@ -68,13 +68,22 @@ export function buildExternalSearchLinks(filters: ExternalSearchFilters): Extern
     filters.location || "Addis Ababa",
   ].filter(Boolean);
   const query = terms.join(" ");
-  const baseTransferred = [filters.location && "location keyword", filters.propertyType && "property type keyword", filters.minBeds && "bedroom keyword"].filter(Boolean) as string[];
+  const baseTransferred = [
+    `Location: ${filters.location || "Addis Ababa"}`,
+    filters.propertyType && `Property type: ${filters.propertyType}`,
+    filters.minBeds && `Bedrooms: ${filters.minBeds}+`,
+  ].filter(Boolean) as string[];
   return sources.map((source) => ({
     id: source.id,
     name: source.name,
     url: source.buildUrl(query, filters),
     relationship: "External search",
-    transferred: [...baseTransferred, ...(filters.listingType ? [source.nativeListingType ? "listing type" : "listing type keyword"] : [])],
+    transferred: [
+      ...baseTransferred,
+      ...(filters.listingType
+        ? [`Listing type: ${filters.listingType === "sale" ? "For sale" : "For rent"}${source.nativeListingType ? " (site filter)" : ""}`]
+        : []),
+    ],
     notTransferred: ["price", "verification", "amenities", "Betoch inventory source"],
     note: source.note,
   }));
