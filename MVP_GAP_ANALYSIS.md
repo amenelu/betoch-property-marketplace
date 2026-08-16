@@ -103,7 +103,7 @@ Betoch's Supabase-backed build is deployed at `https://betoch-property-marketpla
 
 ## Property aggregation extension — remaining work
 
-The Phase A schema, normalized adapter contract, admin source registry, unified direct/aggregated read model, inventory filter, attribution, freshness display, crawl health storage, location aliases and price-history storage are implemented in code. The migration must be applied to production before sources can be registered. No external source or crawler has been invented or enabled.
+The Phase A schema and production migration, normalized adapter contract, admin source registry, unified direct/aggregated read model, inventory filter, attribution, freshness display, crawl health storage, location aliases and price-history storage are complete. No external source or crawler has been invented or enabled; the remaining Phase A work begins with legally approving a real source.
 
 | Priority | Remaining work |
 |---|---|
